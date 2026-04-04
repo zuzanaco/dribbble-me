@@ -190,35 +190,31 @@
 </head>
 <body>
   <div class="w">
-    <div class="bar">
-      <span class="lbl">bg</span>
-      <button class="b on" id="bg-white">White</button>
-      <button class="b" id="bg-cream">Cream</button>
-      <button class="b" id="bg-dark">Dark</button>
-      <button class="b" id="bg-lavender">Lavender</button>
-      <button class="b" id="bg-sage">Sage</button>
-      <button class="b" id="bg-black">Black</button>
-      <div class="sep"></div>
-      <span class="lbl">frame</span>
-      <button class="b" id="dev-browser">Browser</button>
-      <button class="b" id="dev-bare">Screen only</button>
-      <button class="b" id="dev-phone">Phone</button>
-      <button class="b" id="dev-phone-bare">Phone bare</button>
-      <button class="b" id="dev-dual">Dual phones</button>
-      <button class="b" id="dev-triple-bare">3 phones bare</button>
-      <button class="b on" id="dev-filmstrip">Film strip</button>
-      <button class="b" id="dev-tablet">Tablet</button>
-      <button class="b" id="dev-diag3">3 screens diagonal</button>
-      <button class="b" id="dev-diag2">2 screens diagonal</button>
-      <button class="b" id="dev-carousel">Carousel</button>
-      <button class="b" id="dev-stack">Stacked</button>
-      <button class="b" id="dev-collage">Collage strip</button>
-      <button class="b" id="dev-collage-grid">Collage grid</button>
-      <button class="b" id="dev-combo">Desktop + phone</button>
+    <div class="bar" aria-label="Layout options">
+      <div class="control">
+        <label class="lbl" for="theme-select">Theme</label>
+        <select class="sel" id="theme-select"></select>
+      </div>
+      <div class="control">
+        <label class="lbl" for="mode-select">Mode</label>
+        <select class="sel" id="mode-select"></select>
+      </div>
+      <div class="control">
+        <label class="lbl" for="screen-count-select">Screen count</label>
+        <select class="sel" id="screen-count-select"></select>
+      </div>
+      <div class="control control-wide">
+        <label class="lbl" for="layout-select">Layout</label>
+        <select class="sel" id="layout-select"></select>
+      </div>
+      <div class="control">
+        <label class="lbl" for="frame-select">Frame</label>
+        <select class="sel" id="frame-select"></select>
+      </div>
     </div>
 
     <div class="canvas-view" id="canvas-view">
-      <div class="canvas bg-white" id="canvas">
+      <div class="canvas theme-white mode-light" id="canvas">
         <div id="grid-background"></div>
         <div class="stage" id="stage"></div>
       </div>

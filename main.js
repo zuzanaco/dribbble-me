@@ -1,294 +1,561 @@
-import { domToPng } from 'modern-screenshot';
+import { domToPng } from 'modern-screenshot'
 
-const stage = document.getElementById('stage');
-const canvas = document.getElementById('canvas');
-const fi = document.getElementById('fi');
-const exportBtn = document.getElementById('exportBtn');
-const modal = document.getElementById('modal');
-const modalImg = document.getElementById('modal-img');
-const modalClose = document.getElementById('modal-close');
-const modalDl = document.getElementById('modal-dl');
-const copyBtn = document.getElementById('copyBtn');
-const canvasView = document.getElementById('canvas-view');
+const stage = document.getElementById('stage')
+const canvas = document.getElementById('canvas')
+const fi = document.getElementById('fi')
+const exportBtn = document.getElementById('exportBtn')
+const modal = document.getElementById('modal')
+const modalImg = document.getElementById('modal-img')
+const modalClose = document.getElementById('modal-close')
+const modalDl = document.getElementById('modal-dl')
+const copyBtn = document.getElementById('copyBtn')
+const canvasView = document.getElementById('canvas-view')
+
+const themeSelect = document.getElementById('theme-select')
+const modeSelect = document.getElementById('mode-select')
+const screenCountSelect = document.getElementById('screen-count-select')
+const layoutSelect = document.getElementById('layout-select')
+const frameSelect = document.getElementById('frame-select')
+
+const THEMES = {
+  white: { label: 'White' },
+  cream: { label: 'Cream' },
+  sage: { label: 'Sage' }
+}
+
+const MODES = {
+  light: { label: 'Light' },
+  dark: { label: 'Dark' }
+}
+
+const FRAMES = {
+  phone: { label: 'Phone' },
+  'phone-bare': { label: 'Phone bare' },
+  browser: { label: 'Browser' },
+  screen: { label: 'Screen only' },
+  tablet: { label: 'Tablet' }
+}
+
+let lastShot = null
+let activeDrop = null
+const imgStore = {}
+
+const state = {
+  theme: 'white',
+  mode: 'light',
+  layout: 'filmstrip',
+  frame: 'phone',
+  screenCount: 4
+}
 
 function updateScale() {
-  const vw = canvasView.offsetWidth;
-  const vh = canvasView.offsetHeight;
-  const scale = Math.min(vw / 800, vh / 600) * 0.95; // 0.95 to leave a tiny bit of breathing room
-  canvas.style.transform = `scale(${scale})`;
+  const vw = canvasView.offsetWidth
+  const vh = canvasView.offsetHeight
+  const scale = Math.min(vw / 800, vh / 600) * 0.95
+  canvas.style.transform = `scale(${scale})`
 }
 
-window.addEventListener('resize', updateScale);
-setTimeout(updateScale, 100);
+window.addEventListener('resize', updateScale)
+setTimeout(updateScale, 100)
 
-let lastShot = null;
-
-let activeDrop = null;
-let imgStore = {};
-
-function phHTML(id) {
-  return `<div class="ph"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 15l5-5 4 4 3-3 6 6"/><circle cx="8.5" cy="8.5" r="1.5"/></svg><span>upload</span></div><img>`;
+function screenId(index) {
+  return `screen-${index + 1}`
 }
 
-function makeCar(id) {
-  return `<div class="car" data-id="${id}">${phHTML(id)}</div>`;
+function getFrameFamily(frame) {
+  if (frame === 'phone' || frame === 'phone-bare') return 'tall'
+  if (frame === 'tablet') return 'medium'
+  return 'wide'
 }
 
-function d(id) {
-  return `<div class="drop" data-id="${id}"><div class="ph"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 15l5-5 4 4 3-3 6 6"/><circle cx="8.5" cy="8.5" r="1.5"/></svg><span>upload</span></div><img data-id="${id}"></div>`;
+function phHTML() {
+  return `<div class="ph"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 15l5-5 4 4 3-3 6 6"/><circle cx="8.5" cy="8.5" r="1.5"/></svg><span>upload</span></div><img>`
 }
 
-const DEVICES = {
-  browser: () => `<div class="frame-browser"><div class="bbar"><div class="bdot" style="background:#ff5f57"></div><div class="bdot" style="background:#febc2e"></div><div class="bdot" style="background:#28c840"></div><div class="burl"></div></div><div class="scr-browser">${d('d1')}</div></div>`,
-  bare: () => `<div class="frame-full">${d('b1')}</div>`,
-  phone: () => `<div class="frame-phone"><div class="notch"><div class="npill"></div></div><div class="scr-phone">${d('p1')}</div></div>`,
-  'phone-bare': () => `<div class="frame-phone-bare"><div class="scr-phone">${d('pb1')}</div></div>`,
-  dual: () => `<div class="dual"><div class="frame-phone"><div class="notch"><div class="npill"></div></div><div class="scr-phone">${d('dp1')}</div></div><div class="frame-phone"><div class="notch"><div class="npill"></div></div><div class="scr-phone">${d('dp2')}</div></div></div>`,
-  'triple-bare': () => `<div class="triple-bare"><div class="tpanel">${d('tb1')}</div><div class="tpanel">${d('tb2')}</div><div class="tpanel">${d('tb3')}</div></div>`,
-  filmstrip: () => `<div class="filmstrip"><div class="train train1">${makeCar('f1a')}${makeCar('f1b')}${makeCar('f1c')}</div><div class="train train2">${makeCar('f2a')}${makeCar('f2b')}${makeCar('f2c')}</div></div>`,
-  tablet: () => `<div class="frame-tablet-bare"><div class="scr-tablet">${d('t1')}</div></div>`,
-  diag3: () => `<div class="diag diag3"><div class="pane" style="width:240px;height:300px">${d('g1')}</div><div class="pane" style="width:200px;height:320px;z-index:2">${d('g2')}</div><div class="pane" style="width:180px;height:260px">${d('g3')}</div></div>`,
-  diag2: () => `<div class="diag diag2"><div class="pane" style="width:320px;height:300px">${d('g4')}</div><div class="pane" style="width:300px;height:280px;z-index:2">${d('g5')}</div></div>`,
-  carousel: () => `<div class="carousel"><div class="panel">${d('c1')}</div><div class="divider"></div><div class="panel">${d('c2')}</div><div class="divider"></div><div class="panel">${d('c3')}</div></div>`,
-  stack: () => `<div class="stack"><div class="card"><div class="scr-card">${d('s1')}</div></div><div class="card"><div class="scr-card">${d('s2')}</div></div><div class="card"><div class="scr-card">${d('s3')}</div></div></div>`,
-  collage: () => `<div class="collage"><div class="col-side">${d('cl1')}</div><div class="col-gap"></div><div class="col-side" style="width:18%">${d('cl2')}</div><div class="col-gap"></div><div class="col-main">${d('cl3')}</div><div class="col-gap"></div><div class="col-side" style="width:18%">${d('cl4')}</div><div class="col-gap"></div><div class="col-side">${d('cl5')}</div></div>`,
-  'collage-grid': () => `<div class="collage-grid"><div class="cell tall">${d('cg1')}</div><div class="cell">${d('cg2')}</div><div class="cell">${d('cg3')}</div></div>`,
-  combo: () => `<div class="combo"><div class="frame-browser"><div class="bbar"><div class="bdot" style="background:#ff5f57"></div><div class="bdot" style="background:#febc2e"></div><div class="bdot" style="background:#28c840"></div><div class="burl"></div></div><div class="scr-browser">${d('cb1')}</div></div><div class="phone-over"><div class="notch-sm"><div class="npill-sm"></div></div><div class="scr-ph-sm">${d('cb2')}</div></div></div>`
-};
+function dropHTML(id) {
+  return `<div class="drop" data-id="${id}">${phHTML()}</div>`
+}
 
-function render(dev) {
-  stage.innerHTML = DEVICES[dev]();
-  restoreImages();
-  bindAll();
+function renderFrame(frame, id, options = {}) {
+  const family = getFrameFamily(frame)
+  const fitClass = options.fit ? ' frame-fit' : ''
+
+  switch (frame) {
+    case 'browser':
+      return `<div class="frame frame-browser family-${family}${fitClass}"><div class="bbar"><div class="bdot" style="background:#ff5f57"></div><div class="bdot" style="background:#febc2e"></div><div class="bdot" style="background:#28c840"></div><div class="burl"></div></div><div class="scr-browser">${dropHTML(id)}</div></div>`
+    case 'screen':
+      return `<div class="frame frame-screen family-${family}${fitClass}"><div class="scr-screen">${dropHTML(id)}</div></div>`
+    case 'phone':
+      return `<div class="frame frame-phone family-${family}${fitClass}"><div class="notch"><div class="npill"></div></div><div class="scr-phone">${dropHTML(id)}</div></div>`
+    case 'phone-bare':
+      return `<div class="frame frame-phone-bare family-${family}${fitClass}"><div class="scr-phone">${dropHTML(id)}</div></div>`
+    case 'tablet':
+      return `<div class="frame frame-tablet family-${family}${fitClass}"><div class="scr-tablet">${dropHTML(id)}</div></div>`
+    default:
+      return ''
+  }
+}
+
+function toStyle(styleObject) {
+  return Object.entries(styleObject)
+    .filter(([, value]) => value !== null && value !== undefined)
+    .map(([key, value]) => `${key}:${typeof value === 'number' ? `${value}px` : value}`)
+    .join(';')
+}
+
+function absoluteSlot(frame, index, styleObject) {
+  return `<div class="layout-slot" style="${toStyle(styleObject)}">${renderFrame(frame, screenId(index))}</div>`
+}
+
+function panelSlot(panelClass, frame, index) {
+  return `<div class="${panelClass}">${renderFrame(frame, screenId(index), { fit: true })}</div>`
+}
+
+function soloWidth(frame) {
+  const family = getFrameFamily(frame)
+  if (family === 'tall') return 220
+  if (family === 'medium') return 500
+  return 620
+}
+
+function overlapPositions(frame) {
+  const family = getFrameFamily(frame)
+
+  if (family === 'tall') {
+    return [
+      { width: 188, left: 158, top: 88, transform: 'rotate(-7deg)', 'z-index': 1 },
+      { width: 188, left: 408, top: 34, transform: 'rotate(6deg)', 'z-index': 2 }
+    ]
+  }
+
+  if (family === 'medium') {
+    return [
+      { width: 246, left: 118, top: 116, transform: 'rotate(-5deg)', 'z-index': 1 },
+      { width: 246, left: 436, top: 74, transform: 'rotate(4deg)', 'z-index': 2 }
+    ]
+  }
+
+  return [
+    { width: 320, left: 52, top: 168, transform: 'rotate(-5deg)', 'z-index': 1 },
+    { width: 320, left: 430, top: 112, transform: 'rotate(4deg)', 'z-index': 2 }
+  ]
+}
+
+function diagonalPositions(frame) {
+  const family = getFrameFamily(frame)
+
+  if (family === 'tall') {
+    return [
+      { width: 142, left: 92, top: 132, transform: 'rotate(-6deg)', 'z-index': 1 },
+      { width: 142, left: 330, top: 58, transform: 'rotate(0deg)', 'z-index': 3 },
+      { width: 142, left: 566, top: 156, transform: 'rotate(6deg)', 'z-index': 2 }
+    ]
+  }
+
+  if (family === 'medium') {
+    return [
+      { width: 178, left: 70, top: 132, transform: 'rotate(-4deg)', 'z-index': 1 },
+      { width: 178, left: 310, top: 92, transform: 'rotate(0deg)', 'z-index': 3 },
+      { width: 178, left: 550, top: 182, transform: 'rotate(4deg)', 'z-index': 2 }
+    ]
+  }
+
+  return [
+    { width: 208, left: 42, top: 154, transform: 'rotate(-4deg)', 'z-index': 1 },
+    { width: 208, left: 296, top: 104, transform: 'rotate(0deg)', 'z-index': 3 },
+    { width: 208, left: 548, top: 188, transform: 'rotate(4deg)', 'z-index': 2 }
+  ]
+}
+
+function stackPositions(frame) {
+  const family = getFrameFamily(frame)
+
+  if (family === 'tall') {
+    return [
+      { width: 176, left: 178, top: 86, transform: 'rotate(-6deg)', 'z-index': 1 },
+      { width: 166, left: 318, top: 48, transform: 'rotate(2deg)', 'z-index': 3 },
+      { width: 156, left: 466, top: 110, transform: 'rotate(8deg)', 'z-index': 2 }
+    ]
+  }
+
+  if (family === 'medium') {
+    return [
+      { width: 294, left: 120, top: 146, transform: 'rotate(-4deg)', 'z-index': 1 },
+      { width: 270, left: 256, top: 96, transform: 'rotate(2deg)', 'z-index': 3 },
+      { width: 244, left: 402, top: 174, transform: 'rotate(7deg)', 'z-index': 2 }
+    ]
+  }
+
+  return [
+    { width: 462, left: 54, top: 184, transform: 'rotate(-4deg)', 'z-index': 1 },
+    { width: 420, left: 182, top: 118, transform: 'rotate(2deg)', 'z-index': 3 },
+    { width: 378, left: 334, top: 208, transform: 'rotate(6deg)', 'z-index': 2 }
+  ]
+}
+
+function filmstripPositions(count) {
+  const presets = {
+    1: [
+      { width: 222, left: 290, top: 56, transform: 'rotate(-12deg)', 'z-index': 2 }
+    ],
+    2: [
+      { width: 204, left: 124, top: 82, transform: 'rotate(-12deg)', 'z-index': 2 },
+      { width: 204, left: 438, top: 30, transform: 'rotate(-12deg)', 'z-index': 1 }
+    ],
+    3: [
+      { width: 182, left: 26, top: -134, transform: 'rotate(-12deg)', 'z-index': 2 },
+      { width: 182, left: 308, top: 8, transform: 'rotate(-12deg)', 'z-index': 3 },
+      { width: 182, left: 590, top: 154, transform: 'rotate(-12deg)', 'z-index': 1 }
+    ],
+    4: [
+      { width: 168, left: 18, top: -164, transform: 'rotate(-12deg)', 'z-index': 2 },
+      { width: 168, left: 218, top: -12, transform: 'rotate(-12deg)', 'z-index': 3 },
+      { width: 168, left: 430, top: -118, transform: 'rotate(-12deg)', 'z-index': 2 },
+      { width: 168, left: 628, top: 34, transform: 'rotate(-12deg)', 'z-index': 1 }
+    ]
+  }
+
+  return presets[count] || presets[4]
+}
+
+const LAYOUTS = {
+  solo: {
+    label: 'Solo',
+    minScreens: 1,
+    maxScreens: 1,
+    defaultFrame: 'browser',
+    allowedFrames: ['browser', 'screen', 'phone', 'phone-bare', 'tablet'],
+    render: ({ frame }) => `<div class="layout layout-solo">${absoluteSlot(frame, 0, { width: soloWidth(frame) })}</div>`
+  },
+  overlap: {
+    label: 'Overlap',
+    minScreens: 2,
+    maxScreens: 2,
+    defaultFrame: 'phone',
+    allowedFrames: ['browser', 'screen', 'phone', 'phone-bare', 'tablet'],
+    render: ({ frame }) => `<div class="layout layout-overlap">${overlapPositions(frame).map((slot, index) => absoluteSlot(frame, index, slot)).join('')}</div>`
+  },
+  diagonal: {
+    label: 'Diagonal',
+    minScreens: 3,
+    maxScreens: 3,
+    defaultFrame: 'screen',
+    allowedFrames: ['browser', 'screen', 'phone', 'phone-bare', 'tablet'],
+    render: ({ frame }) => `<div class="layout layout-diagonal">${diagonalPositions(frame).map((slot, index) => absoluteSlot(frame, index, slot)).join('')}</div>`
+  },
+  stack: {
+    label: 'Stacked',
+    minScreens: 3,
+    maxScreens: 3,
+    defaultFrame: 'screen',
+    allowedFrames: ['browser', 'screen', 'phone', 'phone-bare', 'tablet'],
+    render: ({ frame }) => `<div class="layout layout-stack">${stackPositions(frame).map((slot, index) => absoluteSlot(frame, index, slot)).join('')}</div>`
+  },
+  split: {
+    label: 'Split',
+    minScreens: 3,
+    maxScreens: 3,
+    defaultFrame: 'screen',
+    allowedFrames: ['browser', 'screen', 'phone', 'phone-bare', 'tablet'],
+    render: ({ frame }) => `<div class="layout layout-split">${[0, 1, 2].map(index => panelSlot('split-panel', frame, index)).join('')}</div>`
+  },
+  grid: {
+    label: 'Grid',
+    minScreens: 3,
+    maxScreens: 3,
+    defaultFrame: 'screen',
+    allowedFrames: ['browser', 'screen', 'phone', 'phone-bare', 'tablet'],
+    render: ({ frame }) => `<div class="layout layout-grid">${[0, 1, 2].map(index => panelSlot('grid-panel', frame, index)).join('')}</div>`
+  },
+  collage: {
+    label: 'Collage',
+    minScreens: 5,
+    maxScreens: 5,
+    defaultFrame: 'phone-bare',
+    allowedFrames: ['phone', 'phone-bare'],
+    render: ({ frame }) => `<div class="layout layout-collage">${[0, 1, 2, 3, 4].map(index => panelSlot('collage-panel', frame, index)).join('')}</div>`
+  },
+  filmstrip: {
+    label: 'Film strip',
+    minScreens: 1,
+    maxScreens: 4,
+    defaultFrame: 'phone',
+    allowedFrames: ['phone', 'phone-bare'],
+    render: ({ frame, screenCount }) => `<div class="layout layout-filmstrip">${filmstripPositions(screenCount).map((slot, index) => absoluteSlot(frame, index, slot)).join('')}</div>`
+  }
+}
+
+function getLayout() {
+  return LAYOUTS[state.layout]
+}
+
+function setCanvasTheme() {
+  canvas.className = 'canvas'
+  canvas.classList.add(`theme-${state.theme}`, `mode-${state.mode}`)
+}
+
+function syncStateToLayout() {
+  const layout = getLayout()
+
+  if (!layout.allowedFrames.includes(state.frame)) {
+    state.frame = layout.defaultFrame
+  }
+
+  if (state.screenCount < layout.minScreens) {
+    state.screenCount = layout.minScreens
+  }
+
+  if (state.screenCount > layout.maxScreens) {
+    state.screenCount = layout.maxScreens
+  }
+}
+
+function setOptions(select, options, selectedValue) {
+  select.innerHTML = options
+    .map(({ value, label }) => `<option value="${value}"${String(value) === String(selectedValue) ? ' selected' : ''}>${label}</option>`)
+    .join('')
+}
+
+function refreshControls() {
+  const layout = getLayout()
+
+  setOptions(
+    themeSelect,
+    Object.entries(THEMES).map(([value, config]) => ({ value, label: config.label })),
+    state.theme
+  )
+
+  setOptions(
+    modeSelect,
+    Object.entries(MODES).map(([value, config]) => ({ value, label: config.label })),
+    state.mode
+  )
+
+  setOptions(
+    layoutSelect,
+    Object.entries(LAYOUTS).map(([value, config]) => ({ value, label: config.label })),
+    state.layout
+  )
+
+  setOptions(
+    frameSelect,
+    layout.allowedFrames.map(value => ({ value, label: FRAMES[value].label })),
+    state.frame
+  )
+
+  setOptions(
+    screenCountSelect,
+    Array.from({ length: layout.maxScreens - layout.minScreens + 1 }, (_, index) => {
+      const count = layout.minScreens + index
+      return { value: count, label: `${count}` }
+    }),
+    state.screenCount
+  )
+
+  screenCountSelect.disabled = layout.minScreens === layout.maxScreens
+  frameSelect.disabled = layout.allowedFrames.length === 1
+}
+
+function render() {
+  stage.innerHTML = getLayout().render(state)
+  restoreImages()
+  bindAll()
+}
+
+function updateUI() {
+  syncStateToLayout()
+  setCanvasTheme()
+  refreshControls()
+  render()
 }
 
 function restoreImages() {
-  stage.querySelectorAll('.drop').forEach(dr => {
-    const id = dr.dataset.id;
-    if (imgStore[id]) {
-      const img = dr.querySelector('img');
-      img.src = imgStore[id];
-      img.classList.add('vis');
-      dr.querySelector('.ph').style.display = 'none';
-    }
-  });
-  stage.querySelectorAll('.car').forEach(car => {
-    const id = car.dataset.id;
-    if (imgStore[id]) {
-      const img = car.querySelector('img');
-      img.src = imgStore[id];
-      img.classList.add('vis');
-      car.querySelector('.ph').style.display = 'none';
-    }
-  });
+  stage.querySelectorAll('.drop').forEach(drop => {
+    const id = drop.dataset.id
+
+    if (!imgStore[id]) return
+
+    const img = drop.querySelector('img')
+    const ph = drop.querySelector('.ph')
+
+    img.src = imgStore[id]
+    img.classList.add('vis')
+    ph.style.display = 'none'
+  })
 }
 
 function bindAll() {
-  stage.querySelectorAll('.drop').forEach(dr => {
-    dr.addEventListener('click', () => { activeDrop = { type: 'drop', el: dr }; fi.click(); });
-    dr.addEventListener('dragover', e => { e.preventDefault(); dr.classList.add('over'); });
-    dr.addEventListener('dragleave', () => dr.classList.remove('over'));
-    dr.addEventListener('drop', e => { e.preventDefault(); dr.classList.remove('over'); loadImgDrop(e.dataTransfer.files[0], dr); });
-  });
-  stage.querySelectorAll('.car').forEach(car => {
-    car.addEventListener('click', () => { activeDrop = { type: 'car', el: car }; fi.click(); });
-    car.addEventListener('dragover', e => { e.preventDefault(); car.classList.add('over'); });
-    car.addEventListener('dragleave', () => car.classList.remove('over'));
-    car.addEventListener('drop', e => { e.preventDefault(); car.classList.remove('over'); loadImgCar(e.dataTransfer.files[0], car); });
-  });
+  stage.querySelectorAll('.drop').forEach(drop => {
+    drop.addEventListener('click', () => {
+      activeDrop = drop
+      fi.click()
+    })
+
+    drop.addEventListener('dragover', event => {
+      event.preventDefault()
+      drop.classList.add('over')
+    })
+
+    drop.addEventListener('dragleave', () => {
+      drop.classList.remove('over')
+    })
+
+    drop.addEventListener('drop', event => {
+      event.preventDefault()
+      drop.classList.remove('over')
+      loadImage(event.dataTransfer.files[0], drop)
+    })
+  })
 }
 
-function loadImgDrop(file, drop) {
-  if (!file || !file.type.startsWith('image/')) return;
-  const r = new FileReader();
-  r.onload = e => {
-    const img = drop.querySelector('img');
-    img.src = e.target.result;
-    img.classList.add('vis');
-    drop.querySelector('.ph').style.display = 'none';
-    imgStore[drop.dataset.id] = e.target.result;
-  };
-  r.readAsDataURL(file);
-}
+function loadImage(file, drop) {
+  if (!file || !file.type.startsWith('image/')) return
 
-function loadImgCar(file, car) {
-  if (!file || !file.type.startsWith('image/')) return;
-  const r = new FileReader();
-  r.onload = e => {
-    const img = car.querySelector('img');
-    img.src = e.target.result;
-    img.classList.add('vis');
-    car.querySelector('.ph').style.display = 'none';
-    imgStore[car.dataset.id] = e.target.result;
-  };
-  r.readAsDataURL(file);
+  const reader = new FileReader()
+  reader.onload = event => {
+    const img = drop.querySelector('img')
+    img.src = event.target.result
+    img.classList.add('vis')
+    drop.querySelector('.ph').style.display = 'none'
+    imgStore[drop.dataset.id] = event.target.result
+  }
+  reader.readAsDataURL(file)
 }
 
 fi.addEventListener('change', () => {
-  if (!activeDrop || !fi.files[0]) return;
-  if (activeDrop.type === 'car') loadImgCar(fi.files[0], activeDrop.el);
-  else loadImgDrop(fi.files[0], activeDrop.el);
-  fi.value = '';
-});
+  if (!activeDrop || !fi.files[0]) return
+  loadImage(fi.files[0], activeDrop)
+  fi.value = ''
+})
 
-// BG Listeners
-[
-  { id: 'bg-white', cls: 'bg-white' },
-  { id: 'bg-cream', cls: 'bg-cream' },
-  { id: 'bg-dark', cls: 'bg-dark' },
-  { id: 'bg-lavender', cls: 'bg-lavender' },
-  { id: 'bg-sage', cls: 'bg-sage' },
-  { id: 'bg-black', cls: 'bg-black' }
-].forEach(bg => {
-  const btn = document.getElementById(bg.id);
-  if (btn) btn.onclick = (e) => setBg(bg.cls, e.target);
-});
+themeSelect.addEventListener('change', () => {
+  state.theme = themeSelect.value
+  setCanvasTheme()
+})
 
-function setBg(cls, btn) {
-  ['bg-white', 'bg-cream', 'bg-dark', 'bg-lavender', 'bg-sage', 'bg-black'].forEach(c => canvas.classList.remove(c));
-  canvas.classList.add(cls);
-  document.querySelectorAll('.bar .b').forEach(b => {
-    if (['White', 'Cream', 'Dark', 'Lavender', 'Sage', 'Black'].includes(b.textContent)) b.classList.remove('on');
-  });
-  btn.classList.add('on');
-}
+modeSelect.addEventListener('change', () => {
+  state.mode = modeSelect.value
+  setCanvasTheme()
+})
 
-// Device Listeners
-[
-  { id: 'dev-browser', dev: 'browser' },
-  { id: 'dev-bare', dev: 'bare' },
-  { id: 'dev-phone', dev: 'phone' },
-  { id: 'dev-phone-bare', dev: 'phone-bare' },
-  { id: 'dev-dual', dev: 'dual' },
-  { id: 'dev-triple-bare', dev: 'triple-bare' },
-  { id: 'dev-filmstrip', dev: 'filmstrip' },
-  { id: 'dev-tablet', dev: 'tablet' },
-  { id: 'dev-diag3', dev: 'diag3' },
-  { id: 'dev-diag2', dev: 'diag2' },
-  { id: 'dev-carousel', dev: 'carousel' },
-  { id: 'dev-stack', dev: 'stack' },
-  { id: 'dev-collage', dev: 'collage' },
-  { id: 'dev-collage-grid', dev: 'collage-grid' },
-  { id: 'dev-combo', dev: 'combo' }
-].forEach(d => {
-  const btn = document.getElementById(d.id);
-  if (btn) btn.onclick = (e) => setDevice(d.dev, e.target);
-});
+layoutSelect.addEventListener('change', () => {
+  state.layout = layoutSelect.value
+  updateUI()
+})
 
-function setDevice(dev, btn) {
-  document.querySelectorAll('.bar .b').forEach(b => {
-    if (!['White', 'Cream', 'Dark', 'Lavender', 'Sage', 'Black'].includes(b.textContent) && !b.classList.contains('export')) b.classList.remove('on');
-  });
-  btn.classList.add('on');
-  render(dev);
-}
+frameSelect.addEventListener('change', () => {
+  state.frame = frameSelect.value
+  updateUI()
+})
+
+screenCountSelect.addEventListener('change', () => {
+  state.screenCount = Number(screenCountSelect.value)
+  updateUI()
+})
 
 async function waitForRenderableAssets(root) {
-  const images = Array.from(root.querySelectorAll('img.vis'));
-  await Promise.all(images.map(img => {
-    if (img.complete) return Promise.resolve();
-    return new Promise(resolve => {
-      img.onload = resolve;
-      img.onerror = resolve;
-    });
-  }));
+  const images = Array.from(root.querySelectorAll('img.vis'))
 
-  await document.fonts.ready;
-  await new Promise(resolve => setTimeout(resolve, 100));
+  await Promise.all(images.map(img => {
+    if (img.complete) return Promise.resolve()
+    return new Promise(resolve => {
+      img.onload = resolve
+      img.onerror = resolve
+    })
+  }))
+
+  await document.fonts.ready
+  await new Promise(resolve => setTimeout(resolve, 100))
 }
 
 async function renderCanvasPng() {
-  await waitForRenderableAssets(canvas);
-  const prevTransform = canvas.style.transform;
-  const prevBorderRadius = canvas.style.borderRadius;
+  await waitForRenderableAssets(canvas)
+  const prevTransform = canvas.style.transform
+  const prevBorderRadius = canvas.style.borderRadius
+
   try {
-    canvas.style.transform = 'none';
-    canvas.style.borderRadius = '0';
+    canvas.style.transform = 'none'
+    canvas.style.borderRadius = '0'
     return await domToPng(canvas, {
       width: 800,
       height: 600,
       scale: 2
-    });
+    })
   } finally {
-    canvas.style.transform = prevTransform;
-    canvas.style.borderRadius = prevBorderRadius;
+    canvas.style.transform = prevTransform
+    canvas.style.borderRadius = prevBorderRadius
   }
 }
 
-// Copy to Clipboard logic
 copyBtn.onclick = async () => {
-  const originalText = copyBtn.textContent;
-  copyBtn.textContent = 'Copying...';
-  copyBtn.disabled = true;
+  const originalText = copyBtn.textContent
+  copyBtn.textContent = 'Copying...'
+  copyBtn.disabled = true
 
   try {
-    const dataUrl = await renderCanvasPng();
-    const blob = await (await fetch(dataUrl)).blob();
-    const item = new ClipboardItem({ "image/png": blob });
-    await navigator.clipboard.write([item]);
-    copyBtn.textContent = 'Copied!';
+    const dataUrl = await renderCanvasPng()
+    const blob = await (await fetch(dataUrl)).blob()
+    const item = new ClipboardItem({ 'image/png': blob })
+    await navigator.clipboard.write([item])
+    copyBtn.textContent = 'Copied!'
     setTimeout(() => {
-      copyBtn.textContent = originalText;
-      copyBtn.disabled = false;
-    }, 2000);
+      copyBtn.textContent = originalText
+      copyBtn.disabled = false
+    }, 2000)
   } catch (err) {
-    console.error('Copy failed:', err);
-    alert('Copy failed. Try downloading instead.');
-    copyBtn.textContent = originalText;
-    copyBtn.disabled = false;
+    console.error('Copy failed:', err)
+    alert('Copy failed. Try downloading instead.')
+    copyBtn.textContent = originalText
+    copyBtn.disabled = false
   }
-};
+}
 
 function triggerDownload(dataUrl) {
-  const link = document.createElement('a');
-  link.href = dataUrl;
-  link.download = `dribbble-shot-${Date.now()}.png`;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
+  const link = document.createElement('a')
+  link.href = dataUrl
+  link.download = `dribbble-shot-${Date.now()}.png`
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
 }
 
-// Export Functionality
 exportBtn.onclick = async () => {
-  const originalText = exportBtn.textContent;
-  exportBtn.textContent = 'Exporting...';
-  exportBtn.disabled = true;
+  const originalText = exportBtn.textContent
+  exportBtn.textContent = 'Exporting...'
+  exportBtn.disabled = true
 
   try {
-    const dataUrl = await renderCanvasPng();
-    lastShot = dataUrl;
-    
-    // Attempt auto-download
-    triggerDownload(dataUrl);
-    
-    // Show modal preview as failsafe
-    modalImg.src = dataUrl;
-    modal.classList.add('vis');
-    
+    const dataUrl = await renderCanvasPng()
+    lastShot = dataUrl
+
+    triggerDownload(dataUrl)
+
+    modalImg.src = dataUrl
+    modal.classList.add('vis')
   } catch (err) {
-    console.error('Export failed:', err);
-    alert(`Export failed: ${err.message || 'Check console'}`);
+    console.error('Export failed:', err)
+    alert(`Export failed: ${err.message || 'Check console'}`)
   } finally {
-    exportBtn.textContent = originalText;
-    exportBtn.disabled = false;
+    exportBtn.textContent = originalText
+    exportBtn.disabled = false
   }
-};
+}
 
 modalDl.onclick = () => {
-  if (lastShot) triggerDownload(lastShot);
-};
+  if (lastShot) triggerDownload(lastShot)
+}
 
 modalClose.onclick = () => {
-  modal.classList.remove('vis');
-  modalImg.src = '';
-};
+  modal.classList.remove('vis')
+  modalImg.src = ''
+}
 
-modal.addEventListener('click', (e) => {
-  if (e.target === modal) {
-    modal.classList.remove('vis');
-    modalImg.src = '';
+modal.addEventListener('click', event => {
+  if (event.target === modal) {
+    modal.classList.remove('vis')
+    modalImg.src = ''
   }
-});
+})
 
-render('filmstrip');
-setTimeout(updateScale, 500);
+updateUI()
+setTimeout(updateScale, 500)
