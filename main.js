@@ -8,6 +8,17 @@ const modal = document.getElementById('modal');
 const modalImg = document.getElementById('modal-img');
 const modalClose = document.getElementById('modal-close');
 const modalDl = document.getElementById('modal-dl');
+const canvasView = document.getElementById('canvas-view');
+
+function updateScale() {
+  const vw = canvasView.offsetWidth;
+  const vh = canvasView.offsetHeight;
+  const scale = Math.min(vw / 800, vh / 600) * 0.95; // 0.95 to leave a tiny bit of breathing room
+  canvas.style.transform = `scale(${scale})`;
+}
+
+window.addEventListener('resize', updateScale);
+setTimeout(updateScale, 100);
 
 let lastShot = null;
 
@@ -35,7 +46,7 @@ function d(id) {
 
 const DEVICES = {
   browser: () => `<div class="frame-browser"><div class="bbar"><div class="bdot" style="background:#ff5f57"></div><div class="bdot" style="background:#febc2e"></div><div class="bdot" style="background:#28c840"></div><div class="burl"></div></div><div class="scr-browser">${d('d1')}</div></div>`,
-  bare: () => `<div class="frame-bare"><div class="scr-bare">${d('b1')}</div></div>`,
+  bare: () => `<div class="frame-full">${d('b1')}</div>`,
   phone: () => `<div class="frame-phone"><div class="notch"><div class="npill"></div></div><div class="scr-phone">${d('p1')}</div></div>`,
   'phone-bare': () => `<div class="frame-phone-bare"><div class="scr-phone">${d('pb1')}</div></div>`,
   dual: () => `<div class="dual"><div class="frame-phone"><div class="notch"><div class="npill"></div></div><div class="scr-phone">${d('dp1')}</div></div><div class="frame-phone"><div class="notch"><div class="npill"></div></div><div class="scr-phone">${d('dp2')}</div></div></div>`,
@@ -178,6 +189,38 @@ function setDevice(dev, btn) {
   render(dev);
 }
 
+async function waitForRenderableAssets(root) {
+  const images = Array.from(root.querySelectorAll('img.vis'));
+  await Promise.all(images.map(img => {
+    if (img.complete) return Promise.resolve();
+    return new Promise(resolve => {
+      img.onload = resolve;
+      img.onerror = resolve;
+    });
+  }));
+
+  await document.fonts.ready;
+  await new Promise(resolve => setTimeout(resolve, 100));
+}
+
+async function renderCanvasPng() {
+  await waitForRenderableAssets(canvas);
+  const prevTransform = canvas.style.transform;
+  const prevBorderRadius = canvas.style.borderRadius;
+  try {
+    canvas.style.transform = 'none';
+    canvas.style.borderRadius = '0';
+    return await domToPng(canvas, {
+      width: 800,
+      height: 600,
+      scale: 2
+    });
+  } finally {
+    canvas.style.transform = prevTransform;
+    canvas.style.borderRadius = prevBorderRadius;
+  }
+}
+
 // Copy to Clipboard logic
 copyBtn.onclick = async () => {
   const originalText = copyBtn.textContent;
@@ -185,16 +228,7 @@ copyBtn.onclick = async () => {
   copyBtn.disabled = true;
 
   try {
-    const images = Array.from(canvas.querySelectorAll('img.vis'));
-    await Promise.all(images.map(img => {
-      if (img.complete) return Promise.resolve();
-      return new Promise(resolve => {
-        img.onload = resolve;
-        img.onerror = resolve;
-      });
-    }));
-    await document.fonts.ready;
-    const dataUrl = await domToPng(canvas, { scale: 2 });
+    const dataUrl = await renderCanvasPng();
     const blob = await (await fetch(dataUrl)).blob();
     const item = new ClipboardItem({ "image/png": blob });
     await navigator.clipboard.write([item]);
@@ -227,19 +261,7 @@ exportBtn.onclick = async () => {
   exportBtn.disabled = true;
 
   try {
-    const images = Array.from(canvas.querySelectorAll('img.vis'));
-    await Promise.all(images.map(img => {
-      if (img.complete) return Promise.resolve();
-      return new Promise(resolve => {
-        img.onload = resolve;
-        img.onerror = resolve;
-      });
-    }));
-
-    await document.fonts.ready;
-    await new Promise(r => setTimeout(r, 100));
-
-    const dataUrl = await domToPng(canvas, { scale: 2 });
+    const dataUrl = await renderCanvasPng();
     lastShot = dataUrl;
     
     // Attempt auto-download
@@ -268,3 +290,4 @@ modalClose.onclick = () => {
 };
 
 render('filmstrip');
+setTimeout(updateScale, 500);
