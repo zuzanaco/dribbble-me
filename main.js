@@ -8,6 +8,7 @@ const modal = document.getElementById('modal');
 const modalImg = document.getElementById('modal-img');
 const modalClose = document.getElementById('modal-close');
 const modalDl = document.getElementById('modal-dl');
+const copyBtn = document.getElementById('copyBtn');
 const canvasView = document.getElementById('canvas-view');
 
 function updateScale() {
@@ -21,13 +22,6 @@ window.addEventListener('resize', updateScale);
 setTimeout(updateScale, 100);
 
 let lastShot = null;
-
-// Add Copy to Clipboard button dynamically
-const copyBtn = document.createElement('button');
-copyBtn.className = 'b export';
-copyBtn.id = 'copyBtn';
-copyBtn.textContent = 'Copy to Clipboard';
-exportBtn.parentNode.insertBefore(copyBtn, exportBtn);
 
 let activeDrop = null;
 let imgStore = {};
@@ -288,6 +282,13 @@ modalClose.onclick = () => {
   modal.classList.remove('vis');
   modalImg.src = '';
 };
+
+modal.addEventListener('click', (e) => {
+  if (e.target === modal) {
+    modal.classList.remove('vis');
+    modalImg.src = '';
+  }
+});
 
 render('filmstrip');
 setTimeout(updateScale, 500);

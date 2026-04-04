@@ -215,8 +215,6 @@
       <button class="b" id="dev-collage">Collage strip</button>
       <button class="b" id="dev-collage-grid">Collage grid</button>
       <button class="b" id="dev-combo">Desktop + phone</button>
-      
-      <button class="b export" id="exportBtn">Export Image</button>
     </div>
 
     <div class="canvas-view" id="canvas-view">
@@ -227,11 +225,7 @@
     </div>
 
     <div class="foot">
-      <div>
-        <span class="hint"><em>click car</em> to upload · drag & drop also works</span>
-        <br>
-        <span class="hint">1600 × 1200 · Dribbble standard</span>
-      </div>
+      <button class="b export" id="exportBtn">Export Image</button>
     </div>
   </div>
 
@@ -239,14 +233,19 @@
 
   <div id="modal">
     <div class="modal-c">
+      <button class="modal-close-x" id="modal-close" aria-label="Close preview">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M6 6l12 12M18 6L6 18"></path>
+        </svg>
+      </button>
       <h3>Export Ready!</h3>
       <img id="modal-img" src="" alt="Dribbble Shot Preview">
+      <div class="modal-hint">Right-click the image above and select "Save Image As..." if the download didn't start.</div>
       <div class="modal-btns">
-        <button class="b close" id="modal-close">Close</button>
+        <button class="b export" id="copyBtn">Copy to Clipboard</button>
         <button class="b export" id="modal-dl">Download Again</button>
       </div>
     </div>
-    <div class="modal-hint">Right-click the image above and select "Save Image As..." if the download didn't start.</div>
   </div>
 
   <script type="module" src="./main.js"></script>
