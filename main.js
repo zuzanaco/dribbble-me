@@ -449,16 +449,25 @@ function bindAll() {
 
     drop.addEventListener('dragover', event => {
       event.preventDefault()
-      drop.classList.add('over')
+      const wrapper = drop.closest('.device-wrapper')
+      if (wrapper) wrapper.classList.add('over')
+      else drop.classList.add('over')
     })
 
-    drop.addEventListener('dragleave', () => {
-      drop.classList.remove('over')
+    drop.addEventListener('dragleave', event => {
+      const wrapper = drop.closest('.device-wrapper')
+      if (wrapper) {
+        if (!wrapper.contains(event.relatedTarget)) wrapper.classList.remove('over')
+      } else {
+        drop.classList.remove('over')
+      }
     })
 
     drop.addEventListener('drop', event => {
       event.preventDefault()
-      drop.classList.remove('over')
+      const wrapper = drop.closest('.device-wrapper')
+      if (wrapper) wrapper.classList.remove('over')
+      else drop.classList.remove('over')
       loadImage(event.dataTransfer.files[0], drop)
     })
   })

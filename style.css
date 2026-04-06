@@ -360,9 +360,9 @@ body {
   overflow: hidden;
 }
 
-.drop.over {
-  outline: 2px dashed rgba(122, 98, 64, 0.45);
-  outline-offset: -2px;
+.device-wrapper.over > .frame,
+.device-wrapper.over > .car {
+  box-shadow: 0 0 0 3px #007aff;
 }
 
 .drop img {
@@ -472,11 +472,6 @@ body {
   flex-shrink: 0;
   position: relative;
   cursor: pointer;
-}
-
-.car.over {
-  outline: 2px dashed rgba(122, 98, 64, 0.45);
-  outline-offset: -2px;
 }
 
 .car-wrap {
