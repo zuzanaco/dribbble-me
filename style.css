@@ -233,6 +233,11 @@ body {
   --divider: rgba(23, 33, 27, 0.98);
 }
 
+.canvas.mode-dark .frame,
+.canvas.mode-dark .car {
+  mix-blend-mode: normal;
+}
+
 #grid-background {
   position: absolute;
   inset: 0;
@@ -307,6 +312,7 @@ body {
   box-shadow:
     0 22px 56px rgba(0, 0, 0, 0.18),
     0 8px 20px rgba(0, 0, 0, 0.1);
+  mix-blend-mode: multiply;
 }
 
 .frame-browser {
@@ -499,6 +505,7 @@ body {
   flex-shrink: 0;
   position: relative;
   cursor: pointer;
+  mix-blend-mode: multiply;
   box-shadow:
     0 16px 48px rgba(0, 0, 0, 0.2),
     0 4px 14px rgba(0, 0, 0, 0.1);
@@ -541,7 +548,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: 5px;
   padding: 64px 40px;
 }
 
