@@ -144,6 +144,10 @@ function wrappedFrame(frame, id, options = {}) {
   return `<div class="device-wrapper" style="--shadow-r:${r}px"><div class="device-shadow"></div>${renderFrame(frame, id, options)}</div>`
 }
 
+function gridSlot(index) {
+  return `<div class="grid-item">${renderFrame('screen', screenId(index))}</div>`
+}
+
 function carHTML(id, pos = 'center') {
   return `<div class="car car--${pos}" data-id="${id}">${phHTML()}</div>`
 }
@@ -185,17 +189,17 @@ const LAYOUTS = {
     label: 'Grid 1',
     minScreens: 3,
     maxScreens: 3,
-    defaultFrame: 'phone-bare',
-    allowedFrames: ['phone-bare', 'tablet-bare', 'screen'],
-    render: ({ frame }) => `<div class="layout layout-grid layout-grid-1"><div class="grid-container">${[0, 1, 2].map(index => `<div class="grid-item">${wrappedFrame(frame, screenId(index))}</div>`).join('')}</div></div>`
+    defaultFrame: 'screen',
+    allowedFrames: ['screen'],
+    render: () => `<div class="layout layout-grid layout-grid-1"><div class="grid-container">${[0, 1, 2].map(index => gridSlot(index)).join('')}</div></div>`
   },
   'grid-2': {
     label: 'Grid 2',
     minScreens: 4,
     maxScreens: 4,
-    defaultFrame: 'phone-bare',
-    allowedFrames: ['phone-bare', 'tablet-bare', 'screen'],
-    render: ({ frame }) => `<div class="layout layout-grid layout-grid-2"><div class="grid-container">${[0, 1, 2, 3].map(index => `<div class="grid-item">${wrappedFrame(frame, screenId(index))}</div>`).join('')}</div></div>`
+    defaultFrame: 'screen',
+    allowedFrames: ['screen'],
+    render: () => `<div class="layout layout-grid layout-grid-2"><div class="grid-container">${[0, 1, 2, 3].map(index => gridSlot(index)).join('')}</div></div>`
   }
 }
 
@@ -254,6 +258,7 @@ function setOptions(select, options, selectedValue) {
 
 function refreshControls() {
   const layout = getLayout()
+  const isGridLayout = state.layout.startsWith('grid-')
 
   setOptions(
     bgColorSelect,
@@ -280,6 +285,7 @@ function refreshControls() {
   )
 
   frameSelect.disabled = layout.allowedFrames.length === 1
+  deviceColorSelect.disabled = isGridLayout
 }
 
 function render() {
