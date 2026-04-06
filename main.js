@@ -48,7 +48,8 @@ const FRAMES = {
   'phone-bare': { label: 'Phone (chromeless)' },
   browser: { label: 'Browser' },
   screen: { label: 'Screen only' },
-  tablet: { label: 'Tablet' }
+  tablet: { label: 'Tablet' },
+  'tablet-bare': { label: 'Tablet (chromeless)' }
 }
 
 let lastShot = null
@@ -79,7 +80,7 @@ function screenId(index) {
 
 function getFrameFamily(frame) {
   if (frame === 'phone' || frame === 'phone-bare') return 'tall'
-  if (frame === 'tablet') return 'medium'
+  if (frame === 'tablet' || frame === 'tablet-bare') return 'medium'
   return 'wide'
 }
 
@@ -106,6 +107,8 @@ function renderFrame(frame, id, options = {}) {
       return `<div class="frame frame-phone-bare family-${family}${fitClass}"><div class="scr-phone">${dropHTML(id)}</div></div>`
     case 'tablet':
       return `<div class="frame frame-tablet family-${family}${fitClass}"><div class="scr-tablet">${dropHTML(id)}</div></div>`
+    case 'tablet-bare':
+      return `<div class="frame frame-tablet-bare family-${family}${fitClass}"><div class="scr-tablet">${dropHTML(id)}</div></div>`
     default:
       return ''
   }
@@ -133,7 +136,7 @@ function soloWidth(frame) {
   return 620
 }
 
-const SHADOW_RADII = { browser: 22, screen: 24, phone: 28, 'phone-bare': 22, tablet: 22 }
+const SHADOW_RADII = { browser: 22, screen: 24, phone: 28, 'phone-bare': 22, tablet: 22, 'tablet-bare': 22 }
 function shadowRadius(frame) { return SHADOW_RADII[frame] || 22 }
 
 function wrappedFrame(frame, id, options = {}) {
@@ -159,7 +162,7 @@ const LAYOUTS = {
     minScreens: 1,
     maxScreens: 1,
     defaultFrame: 'browser',
-    allowedFrames: ['browser', 'screen', 'phone', 'phone-bare', 'tablet'],
+    allowedFrames: ['browser', 'screen', 'phone', 'phone-bare', 'tablet', 'tablet-bare'],
     render: ({ frame }) => `<div class="layout layout-solo">${absoluteSlot(frame, 0, { width: soloWidth(frame) })}</div>`
   },
   split: {
