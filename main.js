@@ -13,7 +13,6 @@ const canvasView = document.getElementById('canvas-view')
 
 const themeSelect = document.getElementById('theme-select')
 const modeSelect = document.getElementById('mode-select')
-const screenCountSelect = document.getElementById('screen-count-select')
 const layoutSelect = document.getElementById('layout-select')
 const frameSelect = document.getElementById('frame-select')
 
@@ -30,7 +29,7 @@ const MODES = {
 
 const FRAMES = {
   phone: { label: 'Phone' },
-  'phone-bare': { label: 'Phone bare' },
+  'phone-bare': { label: 'Phone (chromeless)' },
   browser: { label: 'Browser' },
   screen: { label: 'Screen only' },
   tablet: { label: 'Tablet' }
@@ -86,7 +85,7 @@ function renderFrame(frame, id, options = {}) {
     case 'screen':
       return `<div class="frame frame-screen family-${family}${fitClass}"><div class="scr-screen">${dropHTML(id)}</div></div>`
     case 'phone':
-      return `<div class="frame frame-phone family-${family}${fitClass}"><div class="notch"><div class="npill"></div></div><div class="scr-phone">${dropHTML(id)}</div></div>`
+      return `<div class="frame frame-phone family-${family}${fitClass}"><div class="scr-phone"><div class="dynamic-island"></div>${dropHTML(id)}</div></div>`
     case 'phone-bare':
       return `<div class="frame frame-phone-bare family-${family}${fitClass}"><div class="scr-phone">${dropHTML(id)}</div></div>`
     case 'tablet':
@@ -118,104 +117,24 @@ function soloWidth(frame) {
   return 620
 }
 
-function overlapPositions(frame) {
-  const family = getFrameFamily(frame)
+const SHADOW_RADII = { browser: 22, screen: 24, phone: 28, 'phone-bare': 22, tablet: 22 }
+function shadowRadius(frame) { return SHADOW_RADII[frame] || 22 }
 
-  if (family === 'tall') {
-    return [
-      { width: 188, left: 158, top: 88, transform: 'rotate(-7deg)', 'z-index': 1 },
-      { width: 188, left: 408, top: 34, transform: 'rotate(6deg)', 'z-index': 2 }
-    ]
-  }
-
-  if (family === 'medium') {
-    return [
-      { width: 246, left: 118, top: 116, transform: 'rotate(-5deg)', 'z-index': 1 },
-      { width: 246, left: 436, top: 74, transform: 'rotate(4deg)', 'z-index': 2 }
-    ]
-  }
-
-  return [
-    { width: 320, left: 52, top: 168, transform: 'rotate(-5deg)', 'z-index': 1 },
-    { width: 320, left: 430, top: 112, transform: 'rotate(4deg)', 'z-index': 2 }
-  ]
+function wrappedFrame(frame, id, options = {}) {
+  const r = shadowRadius(frame)
+  return `<div class="device-wrapper" style="--shadow-r:${r}px"><div class="device-shadow"></div>${renderFrame(frame, id, options)}</div>`
 }
 
-function diagonalPositions(frame) {
-  const family = getFrameFamily(frame)
-
-  if (family === 'tall') {
-    return [
-      { width: 142, left: 92, top: 132, transform: 'rotate(-6deg)', 'z-index': 1 },
-      { width: 142, left: 330, top: 58, transform: 'rotate(0deg)', 'z-index': 3 },
-      { width: 142, left: 566, top: 156, transform: 'rotate(6deg)', 'z-index': 2 }
-    ]
-  }
-
-  if (family === 'medium') {
-    return [
-      { width: 178, left: 70, top: 132, transform: 'rotate(-4deg)', 'z-index': 1 },
-      { width: 178, left: 310, top: 92, transform: 'rotate(0deg)', 'z-index': 3 },
-      { width: 178, left: 550, top: 182, transform: 'rotate(4deg)', 'z-index': 2 }
-    ]
-  }
-
-  return [
-    { width: 208, left: 42, top: 154, transform: 'rotate(-4deg)', 'z-index': 1 },
-    { width: 208, left: 296, top: 104, transform: 'rotate(0deg)', 'z-index': 3 },
-    { width: 208, left: 548, top: 188, transform: 'rotate(4deg)', 'z-index': 2 }
-  ]
+function carHTML(id) {
+  return `<div class="car" data-id="${id}">${phHTML()}</div>`
 }
 
-function stackPositions(frame) {
-  const family = getFrameFamily(frame)
-
-  if (family === 'tall') {
-    return [
-      { width: 176, left: 178, top: 86, transform: 'rotate(-6deg)', 'z-index': 1 },
-      { width: 166, left: 318, top: 48, transform: 'rotate(2deg)', 'z-index': 3 },
-      { width: 156, left: 466, top: 110, transform: 'rotate(8deg)', 'z-index': 2 }
-    ]
-  }
-
-  if (family === 'medium') {
-    return [
-      { width: 294, left: 120, top: 146, transform: 'rotate(-4deg)', 'z-index': 1 },
-      { width: 270, left: 256, top: 96, transform: 'rotate(2deg)', 'z-index': 3 },
-      { width: 244, left: 402, top: 174, transform: 'rotate(7deg)', 'z-index': 2 }
-    ]
-  }
-
-  return [
-    { width: 462, left: 54, top: 184, transform: 'rotate(-4deg)', 'z-index': 1 },
-    { width: 420, left: 182, top: 118, transform: 'rotate(2deg)', 'z-index': 3 },
-    { width: 378, left: 334, top: 208, transform: 'rotate(6deg)', 'z-index': 2 }
-  ]
-}
-
-function filmstripPositions(count) {
-  const presets = {
-    1: [
-      { width: 222, left: 290, top: 56, transform: 'rotate(-12deg)', 'z-index': 2 }
-    ],
-    2: [
-      { width: 204, left: 124, top: 82, transform: 'rotate(-12deg)', 'z-index': 2 },
-      { width: 204, left: 438, top: 30, transform: 'rotate(-12deg)', 'z-index': 1 }
-    ],
-    3: [
-      { width: 182, left: 26, top: -134, transform: 'rotate(-12deg)', 'z-index': 2 },
-      { width: 182, left: 308, top: 8, transform: 'rotate(-12deg)', 'z-index': 3 },
-      { width: 182, left: 590, top: 154, transform: 'rotate(-12deg)', 'z-index': 1 }
-    ],
-    4: [
-      { width: 168, left: 18, top: -164, transform: 'rotate(-12deg)', 'z-index': 2 },
-      { width: 168, left: 218, top: -12, transform: 'rotate(-12deg)', 'z-index': 3 },
-      { width: 168, left: 430, top: -118, transform: 'rotate(-12deg)', 'z-index': 2 },
-      { width: 168, left: 628, top: 34, transform: 'rotate(-12deg)', 'z-index': 1 }
-    ]
-  }
-
-  return presets[count] || presets[4]
+function filmstripSlotHTML(frame, id) {
+  const r = shadowRadius(frame)
+  const inner = frame === 'phone-bare'
+    ? carHTML(id)
+    : `<div class="car-wrap">${renderFrame(frame, id)}</div>`
+  return `<div class="device-wrapper" style="--shadow-r:${r}px"><div class="device-shadow"></div>${inner}</div>`
 }
 
 const LAYOUTS = {
@@ -227,61 +146,21 @@ const LAYOUTS = {
     allowedFrames: ['browser', 'screen', 'phone', 'phone-bare', 'tablet'],
     render: ({ frame }) => `<div class="layout layout-solo">${absoluteSlot(frame, 0, { width: soloWidth(frame) })}</div>`
   },
-  overlap: {
-    label: 'Overlap',
-    minScreens: 2,
-    maxScreens: 2,
-    defaultFrame: 'phone',
-    allowedFrames: ['browser', 'screen', 'phone', 'phone-bare', 'tablet'],
-    render: ({ frame }) => `<div class="layout layout-overlap">${overlapPositions(frame).map((slot, index) => absoluteSlot(frame, index, slot)).join('')}</div>`
-  },
-  diagonal: {
-    label: 'Diagonal',
-    minScreens: 3,
-    maxScreens: 3,
-    defaultFrame: 'screen',
-    allowedFrames: ['browser', 'screen', 'phone', 'phone-bare', 'tablet'],
-    render: ({ frame }) => `<div class="layout layout-diagonal">${diagonalPositions(frame).map((slot, index) => absoluteSlot(frame, index, slot)).join('')}</div>`
-  },
-  stack: {
-    label: 'Stacked',
-    minScreens: 3,
-    maxScreens: 3,
-    defaultFrame: 'screen',
-    allowedFrames: ['browser', 'screen', 'phone', 'phone-bare', 'tablet'],
-    render: ({ frame }) => `<div class="layout layout-stack">${stackPositions(frame).map((slot, index) => absoluteSlot(frame, index, slot)).join('')}</div>`
-  },
   split: {
     label: 'Split',
     minScreens: 3,
     maxScreens: 3,
-    defaultFrame: 'screen',
-    allowedFrames: ['browser', 'screen', 'phone', 'phone-bare', 'tablet'],
-    render: ({ frame }) => `<div class="layout layout-split">${[0, 1, 2].map(index => panelSlot('split-panel', frame, index)).join('')}</div>`
-  },
-  grid: {
-    label: 'Grid',
-    minScreens: 3,
-    maxScreens: 3,
-    defaultFrame: 'screen',
-    allowedFrames: ['browser', 'screen', 'phone', 'phone-bare', 'tablet'],
-    render: ({ frame }) => `<div class="layout layout-grid">${[0, 1, 2].map(index => panelSlot('grid-panel', frame, index)).join('')}</div>`
-  },
-  collage: {
-    label: 'Collage',
-    minScreens: 5,
-    maxScreens: 5,
     defaultFrame: 'phone-bare',
-    allowedFrames: ['phone', 'phone-bare'],
-    render: ({ frame }) => `<div class="layout layout-collage">${[0, 1, 2, 3, 4].map(index => panelSlot('collage-panel', frame, index)).join('')}</div>`
+    allowedFrames: ['phone-bare'],
+    render: ({ frame }) => `<div class="layout layout-split">${[0, 1, 2].map(index => wrappedFrame(frame, screenId(index))).join('')}</div>`
   },
   filmstrip: {
     label: 'Film strip',
-    minScreens: 1,
-    maxScreens: 4,
-    defaultFrame: 'phone',
-    allowedFrames: ['phone', 'phone-bare'],
-    render: ({ frame, screenCount }) => `<div class="layout layout-filmstrip">${filmstripPositions(screenCount).map((slot, index) => absoluteSlot(frame, index, slot)).join('')}</div>`
+    minScreens: 3,
+    maxScreens: 3,
+    defaultFrame: 'phone-bare',
+    allowedFrames: ['phone-bare', 'phone'],
+    render: ({ frame }) => `<div class="layout layout-filmstrip"><div class="filmstrip"><div class="train train1">${filmstripSlotHTML(frame, screenId(0))}</div><div class="train train2">${filmstripSlotHTML(frame, screenId(1))}${filmstripSlotHTML(frame, screenId(2))}</div></div></div>`
   }
 }
 
@@ -343,16 +222,6 @@ function refreshControls() {
     state.frame
   )
 
-  setOptions(
-    screenCountSelect,
-    Array.from({ length: layout.maxScreens - layout.minScreens + 1 }, (_, index) => {
-      const count = layout.minScreens + index
-      return { value: count, label: `${count}` }
-    }),
-    state.screenCount
-  )
-
-  screenCountSelect.disabled = layout.minScreens === layout.maxScreens
   frameSelect.disabled = layout.allowedFrames.length === 1
 }
 
@@ -370,7 +239,7 @@ function updateUI() {
 }
 
 function restoreImages() {
-  stage.querySelectorAll('.drop').forEach(drop => {
+  stage.querySelectorAll('.drop, .car').forEach(drop => {
     const id = drop.dataset.id
 
     if (!imgStore[id]) return
@@ -385,7 +254,7 @@ function restoreImages() {
 }
 
 function bindAll() {
-  stage.querySelectorAll('.drop').forEach(drop => {
+  stage.querySelectorAll('.drop, .car').forEach(drop => {
     drop.addEventListener('click', () => {
       activeDrop = drop
       fi.click()
@@ -445,11 +314,6 @@ layoutSelect.addEventListener('change', () => {
 
 frameSelect.addEventListener('change', () => {
   state.frame = frameSelect.value
-  updateUI()
-})
-
-screenCountSelect.addEventListener('change', () => {
-  state.screenCount = Number(screenCountSelect.value)
   updateUI()
 })
 

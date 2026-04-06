@@ -264,6 +264,29 @@ body {
   width: 100%;
 }
 
+.device-wrapper {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.device-shadow {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: var(--shadow-r, 22px);
+  box-shadow:
+    0 22px 56px rgba(0, 0, 0, 0.18),
+    0 8px 20px rgba(0, 0, 0, 0.1);
+  pointer-events: none;
+}
+
+.device-wrapper > .frame,
+.device-wrapper > .car,
+.device-wrapper > .car-wrap {
+  position: relative;
+  z-index: 2;
+}
+
 .frame {
   position: relative;
   flex-shrink: 0;
@@ -304,9 +327,6 @@ body {
 .frame-phone,
 .frame-phone-bare,
 .frame-tablet {
-  box-shadow:
-    0 22px 56px rgba(0, 0, 0, 0.18),
-    0 8px 20px rgba(0, 0, 0, 0.1);
 }
 
 .frame-browser {
@@ -355,6 +375,8 @@ body {
 .frame-phone-bare {
   overflow: hidden;
   background: var(--surface-bg);
+  display: flex;
+  flex-direction: column;
 }
 
 .frame-screen {
@@ -363,7 +385,7 @@ body {
 }
 
 .frame-tablet {
-  border-radius: 28px;
+  border-radius: 22px;
   padding: 6px;
   border: 1px solid var(--screen-border);
 }
@@ -376,30 +398,27 @@ body {
 .frame-phone {
   display: flex;
   flex-direction: column;
-  border-radius: 34px;
+  border-radius: 28px;
   overflow: hidden;
   background: var(--device-border);
-  border: 7px solid var(--device-border);
+  border: 6px solid var(--device-border);
 }
 
-.notch {
-  height: 18px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--device-border);
-  flex-shrink: 0;
-}
-
-.npill {
-  width: 52px;
-  height: 7px;
+.dynamic-island {
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 30%;
+  height: 16px;
   border-radius: 999px;
-  background: rgba(0, 0, 0, 0.4);
+  background: #000;
+  z-index: 10;
+  pointer-events: none;
 }
 
 .frame-phone-bare {
-  border-radius: 28px;
+  border-radius: 22px;
 }
 
 .drop {
@@ -461,13 +480,91 @@ body {
   transform: translate(-50%, -50%);
 }
 
-.layout-split {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 4px;
-  padding: 0 4px;
-  background: var(--divider);
+.filmstrip {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.train {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  gap: 21px;
+}
+
+.train1 {
+  transform: rotate(-12deg);
+  top: -25px;
+  left: 86px;
+  z-index: 2;
+}
+
+.train2 {
+  transform: rotate(-12deg);
+  top: -361px;
+  left: 414px;
+  z-index: 1;
+}
+
+.car {
+  width: 300px;
+  aspect-ratio: 9 / 19.5;
   border-radius: 22px;
+  overflow: hidden;
+  flex-shrink: 0;
+  position: relative;
+  cursor: pointer;
+}
+
+.car.over {
+  outline: 2px dashed rgba(122, 98, 64, 0.45);
+  outline-offset: -2px;
+}
+
+.car-wrap {
+  width: 300px;
+  aspect-ratio: 9 / 19.5;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.car-wrap > .frame {
+  width: 100%;
+}
+
+.car img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: none;
+}
+
+.car img.vis {
+  display: block;
+}
+
+.car .ph {
+  border-radius: 0;
+}
+
+.layout-split {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 64px 40px;
+  isolation: isolate;
+}
+
+.layout-split .device-wrapper > .frame {
+  flex-shrink: 0;
+  height: 472px;
+  width: auto;
 }
 
 .split-panel,
@@ -479,10 +576,6 @@ body {
   min-width: 0;
   min-height: 0;
   overflow: hidden;
-}
-
-.layout-split .split-panel {
-  padding: 0;
 }
 
 .layout-grid {

@@ -1,0 +1,339 @@
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@300;400;500;700&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;}
+.w{font-family:'Space Grotesk',sans-serif;max-width:920px;margin:0 auto;padding:18px 14px;}
+.bar{display:flex;gap:5px;flex-wrap:wrap;align-items:center;margin-bottom:12px;}
+.lbl{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#aaa;margin-right:2px;}
+.sep{width:1px;height:18px;background:#e0e0e0;margin:0 5px;}
+.b{font-family:'DM Mono',monospace;font-size:10px;padding:4px 11px;border:1px solid #ddd;border-radius:16px;background:#fff;color:#555;cursor:pointer;transition:all .12s;white-space:nowrap;}
+.b:hover{background:#111;color:#fff;border-color:#111;}
+.b.on{background:#111;color:#fff;border-color:#111;}
+.canvas{width:100%;border-radius:14px;overflow:hidden;position:relative;transition:background .3s;}
+.canvas.bg-white{background:#ffffff;}
+.canvas.bg-cream{background:#f2ede4;}
+.canvas.bg-dark{background:#0d0d0d;}
+.canvas.bg-lavender{background:#ede8f5;}
+.canvas.bg-sage{background:#e8f0e8;}
+.canvas.bg-black{background:#000000;}
+.canvas::before{content:'';position:absolute;inset:0;pointer-events:none;z-index:0;}
+.canvas.bg-white::before,.canvas.bg-cream::before,.canvas.bg-lavender::before,.canvas.bg-sage::before{background-image:radial-gradient(circle,#00000010 1px,transparent 1px);background-size:26px 26px;}
+.canvas.bg-dark::before,.canvas.bg-black::before{background-image:radial-gradient(circle,#ffffff0a 1px,transparent 1px);background-size:26px 26px;}
+.stage{position:relative;z-index:1;width:100%;display:flex;align-items:center;justify-content:center;padding:36px 24px;min-height:380px;}
+
+/* generic drop used by all other layouts */
+.drop{cursor:pointer;position:relative;overflow:hidden;}
+.drop.over{outline:2px dashed rgba(120,120,255,.5);}
+.drop img{width:100%;height:100%;object-fit:cover;display:none;border-radius:inherit;}
+.drop img.vis{display:block;}
+.ph{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;position:absolute;inset:0;border-radius:inherit;}
+.ph svg{width:18px;height:18px;opacity:.28;}
+.ph span{font-family:'DM Mono',monospace;font-size:7px;letter-spacing:.1em;text-transform:uppercase;opacity:.22;}
+.bg-white .ph,.bg-cream .ph,.bg-lavender .ph,.bg-sage .ph{background:#f0f0f0;}
+.bg-dark .ph,.bg-black .ph{background:#1c1c1c;}
+.bg-white .ph svg,.bg-cream .ph svg,.bg-lavender .ph svg,.bg-sage .ph svg{stroke:#999;}
+.bg-dark .ph svg,.bg-black .ph svg{stroke:#555;}
+
+.frame-browser{width:86%;max-width:600px;border-radius:10px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.18),0 4px 12px rgba(0,0,0,.08);}
+.bbar{height:28px;display:flex;align-items:center;padding:0 10px;gap:5px;flex-shrink:0;}
+.bg-white .bbar,.bg-cream .bbar,.bg-lavender .bbar,.bg-sage .bbar{background:#ececec;}
+.bg-dark .bbar,.bg-black .bbar{background:#1c1c1c;}
+.bdot{width:7px;height:7px;border-radius:50%;}
+.burl{flex:1;height:13px;border-radius:3px;margin-left:8px;}
+.bg-white .burl,.bg-cream .burl,.bg-lavender .burl,.bg-sage .burl{background:#ddd;}
+.bg-dark .burl,.bg-black .burl{background:#2a2a2a;}
+.scr-browser{height:0;padding-bottom:60%;position:relative;}
+.scr-browser .drop{position:absolute;inset:0;height:100%;}
+.frame-bare{width:86%;max-width:600px;border-radius:12px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.18),0 4px 12px rgba(0,0,0,.08);}
+.scr-bare{height:0;padding-bottom:60%;position:relative;}
+.scr-bare .drop{position:absolute;inset:0;height:100%;border-radius:12px;}
+.frame-phone{width:160px;border-radius:32px;overflow:hidden;box-shadow:0 24px 70px rgba(0,0,0,.22),0 6px 16px rgba(0,0,0,.12);border:7px solid #111;flex-shrink:0;}
+.bg-white .frame-phone,.bg-cream .frame-phone,.bg-lavender .frame-phone,.bg-sage .frame-phone{border-color:#1a1a1a;}
+.bg-dark .frame-phone,.bg-black .frame-phone{border-color:#2e2e2e;}
+.notch{height:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.bg-white .notch,.bg-cream .notch,.bg-lavender .notch,.bg-sage .notch{background:#111;}
+.bg-dark .notch,.bg-black .notch{background:#1a1a1a;}
+.npill{width:50px;height:7px;border-radius:4px;background:#000;}
+.scr-phone{height:0;padding-bottom:196%;position:relative;}
+.scr-phone .drop{position:absolute;inset:0;height:100%;}
+.frame-phone-bare{width:160px;border-radius:24px;overflow:hidden;box-shadow:0 24px 70px rgba(0,0,0,.22),0 6px 16px rgba(0,0,0,.12);flex-shrink:0;}
+.dual{display:flex;align-items:flex-end;justify-content:center;position:relative;width:100%;height:340px;}
+.dual .frame-phone:first-child{position:absolute;left:50%;margin-left:-170px;transform:rotate(-6deg) translateY(10px);z-index:1;}
+.dual .frame-phone:last-child{position:absolute;left:50%;margin-left:20px;transform:rotate(5deg);z-index:2;}
+.triple-bare{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;}
+.triple-bare .tpanel{width:160px;height:310px;border-radius:26px;overflow:hidden;box-shadow:0 16px 44px rgba(0,0,0,.16),0 4px 12px rgba(0,0,0,.1);position:relative;flex-shrink:0;}
+.triple-bare .tpanel .drop{position:absolute;inset:0;width:100%;height:100%;border-radius:26px;}
+.triple-bare .tpanel .drop img{border-radius:26px;}
+.triple-bare .tpanel .ph{border-radius:26px;}
+
+/* ── FILM STRIP: car is the only element, image sits directly inside ── */
+.filmstrip{width:100%;height:420px;position:relative;overflow:hidden;}
+.train{position:absolute;display:flex;flex-direction:column;gap:8px;}
+
+/* car: big, rounded. The image IS the car. No drop wrapper needed — 
+   we make the car itself the clickable drop target */
+.car{
+  width:240px;
+  height:420px;
+  border-radius:28px;
+  overflow:hidden;
+  flex-shrink:0;
+  position:relative;
+  cursor:pointer;
+  box-shadow:0 16px 48px rgba(0,0,0,.2),0 4px 14px rgba(0,0,0,.1);
+}
+.car.over{outline:2px dashed rgba(120,120,255,.5);}
+
+/* image fills car completely — no wrapper, no border-radius on image */
+.car img{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:none;
+  border-radius:0;
+}
+.car img.vis{display:block;}
+
+/* placeholder fills car completely — same border-radius as car via overflow:hidden */
+.car .ph{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  border-radius:0; /* car's overflow:hidden handles clipping */
+}
+.bg-white .car .ph,.bg-cream .car .ph,.bg-lavender .car .ph,.bg-sage .car .ph{background:#ebebeb;}
+.bg-dark .car .ph,.bg-black .car .ph{background:#1e1e1e;}
+.car .ph svg{width:20px;height:20px;opacity:.35;}
+.bg-white .car .ph svg,.bg-cream .car .ph svg,.bg-lavender .car .ph svg,.bg-sage .car .ph svg{stroke:#bbb;}
+.bg-dark .car .ph svg,.bg-black .car .ph svg{stroke:#444;}
+.car .ph span{font-family:'DM Mono',monospace;font-size:7px;letter-spacing:.1em;text-transform:uppercase;color:#aaa;opacity:.6;}
+
+/* train 1: full screens, positioned so one dominates */
+.train1{transform:rotate(-12deg);top:-330px;left:30px;z-index:2;}
+/* train 2: half-visible on right, gap between trains is small */
+.train2{transform:rotate(-12deg);top:-250px;left:calc(50% + 110px);z-index:1;}
+
+.frame-tablet-bare{width:380px;border-radius:20px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.18),0 4px 12px rgba(0,0,0,.1);flex-shrink:0;}
+.scr-tablet{height:0;padding-bottom:73%;position:relative;}
+.scr-tablet .drop{position:absolute;inset:0;height:100%;}
+.diag{width:100%;height:360px;position:relative;display:flex;align-items:center;justify-content:center;}
+.diag .pane{position:absolute;border-radius:10px;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,.18);}
+.diag3 .pane:nth-child(1){width:240px;height:300px;left:50%;margin-left:-290px;transform:rotate(-4deg);}
+.diag3 .pane:nth-child(2){width:200px;height:320px;left:50%;margin-left:-80px;z-index:2;box-shadow:0 20px 60px rgba(0,0,0,.22);}
+.diag3 .pane:nth-child(3){width:180px;height:260px;left:50%;margin-left:130px;transform:rotate(4deg);}
+.diag2 .pane:nth-child(1){width:320px;height:300px;left:50%;margin-left:-280px;transform:rotate(-5deg);z-index:1;}
+.diag2 .pane:nth-child(2){width:300px;height:280px;left:50%;margin-left:60px;transform:rotate(4deg);z-index:2;}
+.carousel{width:100%;height:340px;display:flex;align-items:stretch;gap:0;overflow:hidden;border-radius:12px;}
+.carousel .panel{flex:1;min-width:0;position:relative;overflow:hidden;}
+.carousel .panel .drop{position:absolute;inset:0;height:100%;border-radius:0;}
+.carousel .panel .drop img,.carousel .panel .ph{border-radius:0;}
+.carousel .panel:first-child{border-radius:12px 0 0 12px;}
+.carousel .panel:last-child{border-radius:0 12px 12px 0;}
+.carousel .divider{width:3px;flex-shrink:0;}
+.bg-white .carousel .divider,.bg-cream .carousel .divider,.bg-lavender .carousel .divider,.bg-sage .carousel .divider{background:#fff;}
+.bg-dark .carousel .divider,.bg-black .carousel .divider{background:#0d0d0d;}
+.stack{width:100%;height:340px;position:relative;display:flex;align-items:center;justify-content:center;}
+.stack .card{position:absolute;border-radius:14px;overflow:hidden;box-shadow:0 16px 50px rgba(0,0,0,.18);}
+.stack .card:nth-child(1){width:72%;transform:rotate(-3deg) translateY(16px);z-index:1;}
+.stack .card:nth-child(2){width:66%;transform:rotate(2deg) translateY(-8px);z-index:3;box-shadow:0 22px 60px rgba(0,0,0,.22);}
+.stack .card:nth-child(3){width:58%;transform:rotate(6deg) translateY(20px);z-index:2;}
+.stack .card .scr-card{height:0;padding-bottom:68%;position:relative;}
+.stack .card .scr-card .drop{position:absolute;inset:0;height:100%;}
+.collage{width:100%;height:340px;display:flex;align-items:stretch;gap:0;overflow:hidden;border-radius:12px;box-shadow:0 16px 50px rgba(0,0,0,.14);}
+.collage .col-side{width:12%;flex-shrink:0;position:relative;overflow:hidden;}
+.collage .col-side .drop{position:absolute;inset:0;height:100%;border-radius:0;}
+.collage .col-side .drop img,.collage .col-side .ph{border-radius:0;}
+.collage .col-main{flex:1;position:relative;overflow:hidden;}
+.collage .col-main .drop{position:absolute;inset:0;height:100%;border-radius:0;}
+.collage .col-main .drop img,.collage .col-main .ph{border-radius:0;}
+.collage .col-gap{width:3px;flex-shrink:0;}
+.bg-white .collage .col-gap,.bg-cream .collage .col-gap,.bg-lavender .collage .col-gap,.bg-sage .collage .col-gap{background:#e8e8e8;}
+.bg-dark .collage .col-gap,.bg-black .collage .col-gap{background:#0d0d0d;}
+.collage-grid{width:90%;max-width:580px;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:4px;border-radius:12px;overflow:hidden;box-shadow:0 16px 50px rgba(0,0,0,.14);aspect-ratio:4/3;}
+.collage-grid .cell{position:relative;overflow:hidden;}
+.collage-grid .cell .drop{position:absolute;inset:0;height:100%;border-radius:0;}
+.collage-grid .cell .drop img,.collage-grid .cell .ph{border-radius:0;}
+.collage-grid .cell.tall{grid-row:span 2;}
+.bg-white .collage-grid,.bg-cream .collage-grid,.bg-lavender .collage-grid,.bg-sage .collage-grid{background:#e8e8e8;}
+.bg-dark .collage-grid,.bg-black .collage-grid{background:#1a1a1a;}
+.combo{position:relative;width:88%;max-width:600px;}
+.combo .frame-browser{width:100%;max-width:100%;}
+.combo .phone-over{position:absolute;right:-24px;bottom:-24px;z-index:10;width:100px;border-radius:24px;overflow:hidden;box-shadow:0 20px 50px rgba(0,0,0,.24),0 4px 12px rgba(0,0,0,.12);border:5px solid #111;}
+.bg-white .combo .phone-over,.bg-cream .combo .phone-over,.bg-lavender .combo .phone-over,.bg-sage .combo .phone-over{border-color:#1a1a1a;}
+.combo .phone-over .notch-sm{height:11px;display:flex;align-items:center;justify-content:center;}
+.bg-white .combo .phone-over .notch-sm,.bg-cream .combo .phone-over .notch-sm,.bg-lavender .combo .phone-over .notch-sm,.bg-sage .combo .phone-over .notch-sm{background:#111;}
+.bg-dark .combo .phone-over .notch-sm,.bg-black .combo .phone-over .notch-sm{background:#1a1a1a;}
+.npill-sm{width:28px;height:5px;border-radius:3px;background:#000;}
+.combo .scr-ph-sm{height:0;padding-bottom:196%;position:relative;}
+.combo .scr-ph-sm .drop{position:absolute;inset:0;height:100%;}
+.foot{margin-top:8px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:4px;}
+.hint{font-family:'DM Mono',monospace;font-size:9px;color:#bbb;letter-spacing:.04em;}
+.hint em{font-style:normal;color:#999;}
+</style>
+
+<div class="w">
+<div class="bar">
+  <span class="lbl">bg</span>
+  <button class="b on" onclick="setBg('bg-white',this)">White</button>
+  <button class="b" onclick="setBg('bg-cream',this)">Cream</button>
+  <button class="b" onclick="setBg('bg-dark',this)">Dark</button>
+  <button class="b" onclick="setBg('bg-lavender',this)">Lavender</button>
+  <button class="b" onclick="setBg('bg-sage',this)">Sage</button>
+  <button class="b" onclick="setBg('bg-black',this)">Black</button>
+  <div class="sep"></div>
+  <span class="lbl">frame</span>
+  <button class="b" onclick="setDevice('browser',this)">Browser</button>
+  <button class="b" onclick="setDevice('bare',this)">Screen only</button>
+  <button class="b" onclick="setDevice('phone',this)">Phone</button>
+  <button class="b" onclick="setDevice('phone-bare',this)">Phone bare</button>
+  <button class="b" onclick="setDevice('dual',this)">Dual phones</button>
+  <button class="b" onclick="setDevice('triple-bare',this)">3 phones bare</button>
+  <button class="b on" onclick="setDevice('filmstrip',this)">Film strip</button>
+  <button class="b" onclick="setDevice('tablet',this)">Tablet</button>
+  <button class="b" onclick="setDevice('diag3',this)">3 screens diagonal</button>
+  <button class="b" onclick="setDevice('diag2',this)">2 screens diagonal</button>
+  <button class="b" onclick="setDevice('carousel',this)">Carousel</button>
+  <button class="b" onclick="setDevice('stack',this)">Stacked</button>
+  <button class="b" onclick="setDevice('collage',this)">Collage strip</button>
+  <button class="b" onclick="setDevice('collage-grid',this)">Collage grid</button>
+  <button class="b" onclick="setDevice('combo',this)">Desktop + phone</button>
+</div>
+
+<div class="canvas bg-white" id="canvas">
+  <div class="stage" id="stage"></div>
+</div>
+
+<div class="foot">
+  <span class="hint"><em>click car</em> to upload · drag & drop also works</span>
+  <span class="hint">800 × 600 · Dribbble standard</span>
+</div>
+</div>
+
+<input type="file" id="fi" accept="image/*" style="display:none">
+
+<script>
+const stage=document.getElementById('stage'),canvas=document.getElementById('canvas'),fi=document.getElementById('fi');
+let activeDrop=null,imgStore={};
+
+function phHTML(id){return `<div class="ph"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 15l5-5 4 4 3-3 6 6"/><circle cx="8.5" cy="8.5" r="1.5"/></svg><span>upload</span></div><img>`;}
+
+function makeCar(id){
+  return `<div class="car" data-id="${id}">${phHTML(id)}</div>`;
+}
+
+function d(id){return `<div class="drop" data-id="${id}"><div class="ph"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 15l5-5 4 4 3-3 6 6"/><circle cx="8.5" cy="8.5" r="1.5"/></svg><span>upload</span></div><img data-id="${id}"></div>`;}
+
+const DEVICES={
+  browser:()=>`<div class="frame-browser"><div class="bbar"><div class="bdot" style="background:#ff5f57"></div><div class="bdot" style="background:#febc2e"></div><div class="bdot" style="background:#28c840"></div><div class="burl"></div></div><div class="scr-browser">${d('d1')}</div></div>`,
+  bare:()=>`<div class="frame-bare"><div class="scr-bare">${d('b1')}</div></div>`,
+  phone:()=>`<div class="frame-phone"><div class="notch"><div class="npill"></div></div><div class="scr-phone">${d('p1')}</div></div>`,
+  'phone-bare':()=>`<div class="frame-phone-bare"><div class="scr-phone">${d('pb1')}</div></div>`,
+  dual:()=>`<div class="dual"><div class="frame-phone"><div class="notch"><div class="npill"></div></div><div class="scr-phone">${d('dp1')}</div></div><div class="frame-phone"><div class="notch"><div class="npill"></div></div><div class="scr-phone">${d('dp2')}</div></div></div>`,
+  'triple-bare':()=>`<div class="triple-bare"><div class="tpanel">${d('tb1')}</div><div class="tpanel">${d('tb2')}</div><div class="tpanel">${d('tb3')}</div></div>`,
+  filmstrip:()=>`<div class="filmstrip"><div class="train train1">${makeCar('f1a')}${makeCar('f1b')}${makeCar('f1c')}</div><div class="train train2">${makeCar('f2a')}${makeCar('f2b')}${makeCar('f2c')}</div></div>`,
+  tablet:()=>`<div class="frame-tablet-bare"><div class="scr-tablet">${d('t1')}</div></div>`,
+  diag3:()=>`<div class="diag diag3"><div class="pane" style="width:240px;height:300px">${d('g1')}</div><div class="pane" style="width:200px;height:320px;z-index:2">${d('g2')}</div><div class="pane" style="width:180px;height:260px">${d('g3')}</div></div>`,
+  diag2:()=>`<div class="diag diag2"><div class="pane" style="width:320px;height:300px">${d('g4')}</div><div class="pane" style="width:300px;height:280px;z-index:2">${d('g5')}</div></div>`,
+  carousel:()=>`<div class="carousel"><div class="panel">${d('c1')}</div><div class="divider"></div><div class="panel">${d('c2')}</div><div class="divider"></div><div class="panel">${d('c3')}</div></div>`,
+  stack:()=>`<div class="stack"><div class="card"><div class="scr-card">${d('s1')}</div></div><div class="card"><div class="scr-card">${d('s2')}</div></div><div class="card"><div class="scr-card">${d('s3')}</div></div></div>`,
+  collage:()=>`<div class="collage"><div class="col-side">${d('cl1')}</div><div class="col-gap"></div><div class="col-side" style="width:18%">${d('cl2')}</div><div class="col-gap"></div><div class="col-main">${d('cl3')}</div><div class="col-gap"></div><div class="col-side" style="width:18%">${d('cl4')}</div><div class="col-gap"></div><div class="col-side">${d('cl5')}</div></div>`,
+  'collage-grid':()=>`<div class="collage-grid"><div class="cell tall">${d('cg1')}</div><div class="cell">${d('cg2')}</div><div class="cell">${d('cg3')}</div></div>`,
+  combo:()=>`<div class="combo"><div class="frame-browser"><div class="bbar"><div class="bdot" style="background:#ff5f57"></div><div class="bdot" style="background:#febc2e"></div><div class="bdot" style="background:#28c840"></div><div class="burl"></div></div><div class="scr-browser">${d('cb1')}</div></div><div class="phone-over"><div class="notch-sm"><div class="npill-sm"></div></div><div class="scr-ph-sm">${d('cb2')}</div></div></div>`
+};
+
+function render(dev){
+  stage.innerHTML = DEVICES[dev]();
+  restoreImages();
+  bindAll();
+}
+
+function restoreImages(){
+  // restore normal drops
+  stage.querySelectorAll('.drop').forEach(dr=>{
+    const id=dr.dataset.id;
+    if(imgStore[id]){
+      const img=dr.querySelector('img');
+      img.src=imgStore[id];img.classList.add('vis');
+      dr.querySelector('.ph').style.display='none';
+    }
+  });
+  // restore cars
+  stage.querySelectorAll('.car').forEach(car=>{
+    const id=car.dataset.id;
+    if(imgStore[id]){
+      const img=car.querySelector('img');
+      img.src=imgStore[id];img.classList.add('vis');
+      car.querySelector('.ph').style.display='none';
+    }
+  });
+}
+
+function bindAll(){
+  // bind normal drops
+  stage.querySelectorAll('.drop').forEach(dr=>{
+    dr.addEventListener('click',()=>{activeDrop={type:'drop',el:dr};fi.click();});
+    dr.addEventListener('dragover',e=>{e.preventDefault();dr.classList.add('over');});
+    dr.addEventListener('dragleave',()=>dr.classList.remove('over'));
+    dr.addEventListener('drop',e=>{e.preventDefault();dr.classList.remove('over');loadImgDrop(e.dataTransfer.files[0],dr);});
+  });
+  // bind cars
+  stage.querySelectorAll('.car').forEach(car=>{
+    car.addEventListener('click',()=>{activeDrop={type:'car',el:car};fi.click();});
+    car.addEventListener('dragover',e=>{e.preventDefault();car.classList.add('over');});
+    car.addEventListener('dragleave',()=>car.classList.remove('over'));
+    car.addEventListener('drop',e=>{e.preventDefault();car.classList.remove('over');loadImgCar(e.dataTransfer.files[0],car);});
+  });
+}
+
+function loadImgDrop(file,drop){
+  if(!file||!file.type.startsWith('image/'))return;
+  const r=new FileReader();
+  r.onload=e=>{
+    const img=drop.querySelector('img');
+    img.src=e.target.result;img.classList.add('vis');
+    drop.querySelector('.ph').style.display='none';
+    imgStore[drop.dataset.id]=e.target.result;
+  };
+  r.readAsDataURL(file);
+}
+
+function loadImgCar(file,car){
+  if(!file||!file.type.startsWith('image/'))return;
+  const r=new FileReader();
+  r.onload=e=>{
+    const img=car.querySelector('img');
+    img.src=e.target.result;img.classList.add('vis');
+    car.querySelector('.ph').style.display='none';
+    imgStore[car.dataset.id]=e.target.result;
+  };
+  r.readAsDataURL(file);
+}
+
+fi.addEventListener('change',()=>{
+  if(!activeDrop||!fi.files[0])return;
+  if(activeDrop.type==='car') loadImgCar(fi.files[0],activeDrop.el);
+  else loadImgDrop(fi.files[0],activeDrop.el);
+  fi.value='';
+});
+
+const BG=['White','Cream','Dark','Lavender','Sage','Black'];
+function setBg(cls,btn){
+  ['bg-white','bg-cream','bg-dark','bg-lavender','bg-sage','bg-black'].forEach(c=>canvas.classList.remove(c));
+  canvas.classList.add(cls);
+  document.querySelectorAll('.bar .b').forEach(b=>{if(BG.includes(b.textContent))b.classList.remove('on');});
+  btn.classList.add('on');
+}
+function setDevice(dev,btn){
+  document.querySelectorAll('.bar .b').forEach(b=>{if(!BG.includes(b.textContent))b.classList.remove('on');});
+  btn.classList.add('on');render(dev);
+}
+render('filmstrip');
+</script>
