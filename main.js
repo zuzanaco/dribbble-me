@@ -171,11 +171,11 @@ const LAYOUTS = {
   },
   split: {
     label: 'Split',
-    minScreens: 3,
-    maxScreens: 3,
+    minScreens: 4,
+    maxScreens: 4,
     defaultFrame: 'phone-bare',
     allowedFrames: ['phone-bare'],
-    render: ({ frame }) => `<div class="layout layout-split">${[0, 1, 2].map(index => wrappedFrame(frame, screenId(index))).join('')}</div>`
+    render: ({ frame }) => `<div class="layout layout-split">${[0, 1, 2, 3].map(index => wrappedFrame(frame, screenId(index))).join('')}</div>`
   },
   filmstrip: {
     label: 'Film strip',

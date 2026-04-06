@@ -499,9 +499,9 @@ body {
 .layout-split {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 5px;
-  padding: 64px 40px;
+  padding: 64px 0 64px 68px;
   isolation: isolate;
 }
 
