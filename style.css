@@ -355,6 +355,8 @@ body {
 .frame-phone-bare {
   overflow: hidden;
   background: var(--surface-bg);
+  display: flex;
+  flex-direction: column;
 }
 
 .frame-screen {
@@ -536,12 +538,17 @@ body {
 }
 
 .layout-split {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 4px;
-  padding: 0 4px;
-  background: var(--divider);
-  border-radius: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 64px 40px;
+}
+
+.layout-split > .frame {
+  flex-shrink: 0;
+  height: 472px;
+  width: auto;
 }
 
 .split-panel,
@@ -553,10 +560,6 @@ body {
   min-width: 0;
   min-height: 0;
   overflow: hidden;
-}
-
-.layout-split .split-panel {
-  padding: 0;
 }
 
 .layout-grid {

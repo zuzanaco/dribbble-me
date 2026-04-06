@@ -142,9 +142,9 @@ const LAYOUTS = {
     label: 'Split',
     minScreens: 3,
     maxScreens: 3,
-    defaultFrame: 'screen',
-    allowedFrames: ['browser', 'screen', 'phone', 'phone-bare', 'tablet'],
-    render: ({ frame }) => `<div class="layout layout-split">${[0, 1, 2].map(index => panelSlot('split-panel', frame, index)).join('')}</div>`
+    defaultFrame: 'phone-bare',
+    allowedFrames: ['phone-bare'],
+    render: ({ frame }) => `<div class="layout layout-split">${[0, 1, 2].map(index => renderFrame(frame, screenId(index))).join('')}</div>`
   },
   filmstrip: {
     label: 'Film strip',
