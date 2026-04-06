@@ -228,8 +228,8 @@ function applyCanvasColors() {
   const sr = Math.round(r * 0.4)
   const sg = Math.round(g * 0.4)
   const sb = Math.round(b * 0.4)
-  const shadowColor1 = `rgba(${sr},${sg},${sb},0.22)`
-  const shadowColor2 = `rgba(${sr},${sg},${sb},0.14)`
+  const shadowColor1 = `rgba(${sr},${sg},${sb},0.32)`
+  const shadowColor2 = `rgba(${sr},${sg},${sb},0.20)`
 
   const vars = {
     '--canvas-bg': bg.value,
