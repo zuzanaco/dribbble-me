@@ -304,7 +304,7 @@ body {
 }
 
 .frame-screen {
-  border-radius: 24px;
+  border-radius: 22px;
 }
 
 .frame-tablet {
@@ -579,6 +579,7 @@ body {
   min-height: 0;
   overflow: hidden;
   border-radius: 22px;
+  box-shadow: var(--device-shadow);
 }
 
 .layout-grid .frame {
