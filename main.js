@@ -163,14 +163,15 @@ function filmstripSlotHTML(frame, id, pos = 'center') {
 const THREEUP_W = 220
 const THREEUP_H = Math.round(THREEUP_W * 19.5 / 9)
 
-function threeUpSlot(frame, index, { cx, cy, z = 1, rot = 0 }) {
+function threeUpSlot(frame, index, { cx, cy, z = 1, rot = 0, w = THREEUP_W }) {
+  const h = Math.round(w * 19.5 / 9)
   const r = shadowRadius(frame)
   const parts = [
     `position:absolute`,
-    `left:${Math.round(cx - THREEUP_W / 2)}px`,
-    `top:${Math.round(cy - THREEUP_H / 2)}px`,
-    `width:${THREEUP_W}px`,
-    `height:${THREEUP_H}px`,
+    `left:${Math.round(cx - w / 2)}px`,
+    `top:${Math.round(cy - h / 2)}px`,
+    `width:${w}px`,
+    `height:${h}px`,
     `z-index:${z}`,
     rot ? `transform:rotate(${rot}deg)` : null,
     `--shadow-r:${r}px`
@@ -252,9 +253,9 @@ const LAYOUTS = {
     defaultFrame: 'phone-bare',
     allowedFrames: ['phone', 'phone-bare'],
     render: ({ frame }) => threeUp(frame, [
-      { cx: 400, cy: 296, z: 3, rot: 0 },
-      { cx: 210, cy: 310, z: 1, rot: -10 },
-      { cx: 590, cy: 310, z: 2, rot: 10 }
+      { cx: 400, cy: 296, z: 3, rot: 0,   w: 180 },
+      { cx: 185, cy: 310, z: 1, rot: -10, w: 180 },
+      { cx: 615, cy: 310, z: 2, rot: 10,  w: 180 }
     ])
   },
   'split-1': {
