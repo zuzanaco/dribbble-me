@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Independent Layered Shadows</title>
+    <style>
+        :root {
+            --bg-color: #f0f2f5;
+            --card-color: #ffffff;
+            --shadow-strength: rgba(0, 0, 0, 0.15);
+            --gap-size: 30px; /* Adjust this to space them out more */
+        }
+
+        body {
+            background-color: var(--bg-color);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+
+        /* The Container: 
+           'isolation: isolate' creates a local stacking context. 
+           It ensures our z-indexes stay inside this row and don't 
+           interact with the rest of the page.
+        */
+        .row-container {
+            display: flex;
+            gap: var(--gap-size);
+            isolation: isolate; 
+            padding: 50px;
+        }
+
+        .card-wrapper {
+            position: relative;
+            width: 200px;
+            height: 200px;
+        }
+
+        /* The Content Layer:
+           Higher z-index so it sits 'above' all shadows in the row.
+        */
+        .card-content {
+            position: relative;
+            z-index: 2; 
+            background: var(--card-color);
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-weight: 600;
+            color: #333;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        /* The Shadow Layer:
+           Lower z-index so it projects onto the background, 
+           but stays 'underneath' any neighboring card-content.
+        */
+        .card-shadow {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 1;
+            border-radius: 8px;
+            
+            /* Large, natural, unclipped shadow */
+            box-shadow: 0 15px 45px var(--shadow-strength);
+            
+            /* Optional: shrink shadow slightly to ensure it doesn't 
+               peek out from the exact center of the border 
+            */
+            transform: scale(0.98);
+            pointer-events: none; /* So the shadow doesn't block mouse clicks */
+        }
+
+        /* Fun hover effect to show the independence */
+        .card-wrapper:hover .card-content {
+            transform: translateY(-5px);
+            transition: transform 0.2s ease;
+        }
+        .card-wrapper:hover .card-shadow {
+            transform: translateY(2px) scale(0.96);
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.2);
+            transition: all 0.2s ease;
+        }
+        
+        .card-content, .card-shadow {
+            transition: all 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="row-container">
+        <div class="card-wrapper">
+            <div class="card-shadow"></div>
+            <div class="card-content">Box 1</div>
+        </div>
+
+        <div class="card-wrapper">
+            <div class="card-shadow"></div>
+            <div class="card-content">Box 2</div>
+        </div>
+
+        <div class="card-wrapper">
+            <div class="card-shadow"></div>
+            <div class="card-content">Box 3</div>
+        </div>
+    </div>
+
+</body>
+</html>

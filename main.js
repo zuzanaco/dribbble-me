@@ -13,7 +13,6 @@ const canvasView = document.getElementById('canvas-view')
 
 const themeSelect = document.getElementById('theme-select')
 const modeSelect = document.getElementById('mode-select')
-const screenCountSelect = document.getElementById('screen-count-select')
 const layoutSelect = document.getElementById('layout-select')
 const frameSelect = document.getElementById('frame-select')
 
@@ -86,7 +85,7 @@ function renderFrame(frame, id, options = {}) {
     case 'screen':
       return `<div class="frame frame-screen family-${family}${fitClass}"><div class="scr-screen">${dropHTML(id)}</div></div>`
     case 'phone':
-      return `<div class="frame frame-phone family-${family}${fitClass}"><div class="notch"><div class="npill"></div></div><div class="scr-phone">${dropHTML(id)}</div></div>`
+      return `<div class="frame frame-phone family-${family}${fitClass}"><div class="scr-phone"><div class="dynamic-island"></div>${dropHTML(id)}</div></div>`
     case 'phone-bare':
       return `<div class="frame frame-phone-bare family-${family}${fitClass}"><div class="scr-phone">${dropHTML(id)}</div></div>`
     case 'tablet':
@@ -118,15 +117,24 @@ function soloWidth(frame) {
   return 620
 }
 
+const SHADOW_RADII = { browser: 22, screen: 24, phone: 28, 'phone-bare': 22, tablet: 22 }
+function shadowRadius(frame) { return SHADOW_RADII[frame] || 22 }
+
+function wrappedFrame(frame, id, options = {}) {
+  const r = shadowRadius(frame)
+  return `<div class="device-wrapper" style="--shadow-r:${r}px"><div class="device-shadow"></div>${renderFrame(frame, id, options)}</div>`
+}
+
 function carHTML(id) {
   return `<div class="car" data-id="${id}">${phHTML()}</div>`
 }
 
 function filmstripSlotHTML(frame, id) {
-  if (frame === 'phone-bare') {
-    return carHTML(id)
-  }
-  return `<div class="car-wrap">${renderFrame(frame, id)}</div>`
+  const r = shadowRadius(frame)
+  const inner = frame === 'phone-bare'
+    ? carHTML(id)
+    : `<div class="car-wrap">${renderFrame(frame, id)}</div>`
+  return `<div class="device-wrapper" style="--shadow-r:${r}px"><div class="device-shadow"></div>${inner}</div>`
 }
 
 const LAYOUTS = {
@@ -144,7 +152,7 @@ const LAYOUTS = {
     maxScreens: 3,
     defaultFrame: 'phone-bare',
     allowedFrames: ['phone-bare'],
-    render: ({ frame }) => `<div class="layout layout-split">${[0, 1, 2].map(index => renderFrame(frame, screenId(index))).join('')}</div>`
+    render: ({ frame }) => `<div class="layout layout-split">${[0, 1, 2].map(index => wrappedFrame(frame, screenId(index))).join('')}</div>`
   },
   filmstrip: {
     label: 'Film strip',
@@ -214,16 +222,6 @@ function refreshControls() {
     state.frame
   )
 
-  setOptions(
-    screenCountSelect,
-    Array.from({ length: layout.maxScreens - layout.minScreens + 1 }, (_, index) => {
-      const count = layout.minScreens + index
-      return { value: count, label: `${count}` }
-    }),
-    state.screenCount
-  )
-
-  screenCountSelect.disabled = layout.minScreens === layout.maxScreens
   frameSelect.disabled = layout.allowedFrames.length === 1
 }
 
@@ -316,11 +314,6 @@ layoutSelect.addEventListener('change', () => {
 
 frameSelect.addEventListener('change', () => {
   state.frame = frameSelect.value
-  updateUI()
-})
-
-screenCountSelect.addEventListener('change', () => {
-  state.screenCount = Number(screenCountSelect.value)
   updateUI()
 })
 

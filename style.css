@@ -233,11 +233,6 @@ body {
   --divider: rgba(23, 33, 27, 0.98);
 }
 
-.canvas.mode-dark .frame,
-.canvas.mode-dark .car {
-  mix-blend-mode: normal;
-}
-
 #grid-background {
   position: absolute;
   inset: 0;
@@ -267,6 +262,29 @@ body {
 
 .layout-slot > .frame {
   width: 100%;
+}
+
+.device-wrapper {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.device-shadow {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: var(--shadow-r, 22px);
+  box-shadow:
+    0 22px 56px rgba(0, 0, 0, 0.18),
+    0 8px 20px rgba(0, 0, 0, 0.1);
+  pointer-events: none;
+}
+
+.device-wrapper > .frame,
+.device-wrapper > .car,
+.device-wrapper > .car-wrap {
+  position: relative;
+  z-index: 2;
 }
 
 .frame {
@@ -309,10 +327,6 @@ body {
 .frame-phone,
 .frame-phone-bare,
 .frame-tablet {
-  box-shadow:
-    0 22px 56px rgba(0, 0, 0, 0.18),
-    0 8px 20px rgba(0, 0, 0, 0.1);
-  mix-blend-mode: multiply;
 }
 
 .frame-browser {
@@ -371,7 +385,7 @@ body {
 }
 
 .frame-tablet {
-  border-radius: 28px;
+  border-radius: 22px;
   padding: 6px;
   border: 1px solid var(--screen-border);
 }
@@ -384,30 +398,27 @@ body {
 .frame-phone {
   display: flex;
   flex-direction: column;
-  border-radius: 34px;
+  border-radius: 28px;
   overflow: hidden;
   background: var(--device-border);
-  border: 7px solid var(--device-border);
+  border: 6px solid var(--device-border);
 }
 
-.notch {
-  height: 18px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--device-border);
-  flex-shrink: 0;
-}
-
-.npill {
-  width: 52px;
-  height: 7px;
+.dynamic-island {
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 30%;
+  height: 16px;
   border-radius: 999px;
-  background: rgba(0, 0, 0, 0.4);
+  background: #000;
+  z-index: 10;
+  pointer-events: none;
 }
 
 .frame-phone-bare {
-  border-radius: 28px;
+  border-radius: 22px;
 }
 
 .drop {
@@ -474,6 +485,7 @@ body {
   height: 100%;
   position: relative;
   overflow: hidden;
+  isolation: isolate;
 }
 
 .train {
@@ -500,15 +512,11 @@ body {
 .car {
   width: 300px;
   aspect-ratio: 9 / 19.5;
-  border-radius: 28px;
+  border-radius: 22px;
   overflow: hidden;
   flex-shrink: 0;
   position: relative;
   cursor: pointer;
-  mix-blend-mode: multiply;
-  box-shadow:
-    0 16px 48px rgba(0, 0, 0, 0.2),
-    0 4px 14px rgba(0, 0, 0, 0.1);
 }
 
 .car.over {
@@ -550,9 +558,10 @@ body {
   justify-content: center;
   gap: 5px;
   padding: 64px 40px;
+  isolation: isolate;
 }
 
-.layout-split > .frame {
+.layout-split .device-wrapper > .frame {
   flex-shrink: 0;
   height: 472px;
   width: auto;
