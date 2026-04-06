@@ -199,7 +199,7 @@ const LAYOUTS = {
     maxScreens: 4,
     defaultFrame: 'screen',
     allowedFrames: ['screen'],
-    render: () => `<div class="layout layout-grid layout-grid-2"><div class="grid-container">${[0, 1, 2, 3].map(index => gridSlot(index)).join('')}</div></div>`
+    render: () => `<div class="layout layout-grid layout-grid-2"><div class="grid-col">${gridSlot(0)}${gridSlot(1)}</div><div class="grid-col">${gridSlot(2)}${gridSlot(3)}</div></div>`
   }
 }
 
