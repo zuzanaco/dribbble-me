@@ -339,8 +339,8 @@ function applyCanvasColors() {
   // Derive shadow tint from bg hue: keep hue, boost saturation, force dark lightness
   const [h, s] = hexToHsl(bg.value)
   const shadowHsl = `hsla(${Math.round(h)}, ${Math.round(Math.min(s * 2.5, 55))}%, 18%, `
-  const shadowColor1 = shadowHsl + '0.22)'
-  const shadowColor2 = shadowHsl + '0.13)'
+  const shadowColor1 = shadowHsl + '0.19)'
+  const shadowColor2 = shadowHsl + '0.11)'
 
   const vars = {
     '--canvas-bg': bg.value,

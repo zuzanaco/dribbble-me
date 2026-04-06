@@ -311,6 +311,7 @@ body {
   border-radius: 22px;
   padding: 6px;
   border: 1px solid var(--screen-border);
+  transform: translateZ(0);
 }
 
 .frame-tablet .scr-tablet {
@@ -320,6 +321,7 @@ body {
 
 .frame-tablet-bare {
   border-radius: 22px;
+  transform: translateZ(0);
 }
 
 .frame-tablet-bare .scr-tablet {
