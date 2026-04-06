@@ -47,7 +47,7 @@ const FRAMES = {
   phone: { label: 'Phone' },
   'phone-bare': { label: 'Phone (chromeless)' },
   browser: { label: 'Browser' },
-  screen: { label: 'Screen only' },
+  screen: { label: 'Browser (chromeless)' },
   tablet: { label: 'Tablet' },
   'tablet-bare': { label: 'Tablet (chromeless)' }
 }
