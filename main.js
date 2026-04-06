@@ -513,3 +513,9 @@ modal.addEventListener('click', event => {
 
 updateUI()
 setTimeout(updateScale, 500)
+
+const footerYear = document.getElementById('footer-year')
+if (footerYear) {
+  const start = 2026, now = new Date().getFullYear()
+  footerYear.textContent = now > start ? `${start}–${now}` : `${start}`
+}
