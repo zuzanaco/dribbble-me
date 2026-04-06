@@ -424,6 +424,17 @@ body {
   transform: translate(-50%, -50%);
 }
 
+.layout-3up {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.layout-3up .device-wrapper > .frame {
+  width: 100%;
+  height: 100%;
+}
+
 .filmstrip {
   width: 100%;
   height: 100%;

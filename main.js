@@ -160,6 +160,28 @@ function filmstripSlotHTML(frame, id, pos = 'center') {
   return `<div class="device-wrapper" style="--shadow-r:${r}px"><div class="device-shadow"></div>${inner}</div>`
 }
 
+const THREEUP_W = 220
+const THREEUP_H = Math.round(THREEUP_W * 19.5 / 9)
+
+function threeUpSlot(frame, index, { cx, cy, z = 1, rot = 0 }) {
+  const r = shadowRadius(frame)
+  const parts = [
+    `position:absolute`,
+    `left:${Math.round(cx - THREEUP_W / 2)}px`,
+    `top:${Math.round(cy - THREEUP_H / 2)}px`,
+    `width:${THREEUP_W}px`,
+    `height:${THREEUP_H}px`,
+    `z-index:${z}`,
+    rot ? `transform:rotate(${rot}deg)` : null,
+    `--shadow-r:${r}px`
+  ].filter(Boolean).join(';')
+  return `<div class="device-wrapper" style="${parts}"><div class="device-shadow"></div>${renderFrame(frame, screenId(index))}</div>`
+}
+
+function threeUp(frame, slots) {
+  return `<div class="layout layout-3up">${slots.map((s, i) => threeUpSlot(frame, i, s)).join('')}</div>`
+}
+
 const LAYOUTS = {
   solo: {
     label: 'Solo',
@@ -168,6 +190,72 @@ const LAYOUTS = {
     defaultFrame: 'browser',
     allowedFrames: ['browser', 'screen', 'phone', 'phone-bare', 'tablet', 'tablet-bare'],
     render: ({ frame }) => `<div class="layout layout-solo">${absoluteSlot(frame, 0, { width: soloWidth(frame) })}</div>`
+  },
+  '3up-level': {
+    label: '3-Up: Level',
+    minScreens: 3, maxScreens: 3,
+    defaultFrame: 'phone-bare',
+    allowedFrames: ['phone', 'phone-bare'],
+    render: ({ frame }) => threeUp(frame, [
+      { cx: 160, cy: 300 },
+      { cx: 400, cy: 300 },
+      { cx: 640, cy: 300 }
+    ])
+  },
+  '3up-v': {
+    label: '3-Up: V',
+    minScreens: 3, maxScreens: 3,
+    defaultFrame: 'phone-bare',
+    allowedFrames: ['phone', 'phone-bare'],
+    render: ({ frame }) => threeUp(frame, [
+      { cx: 160, cy: 265 },
+      { cx: 400, cy: 335 },
+      { cx: 640, cy: 265 }
+    ])
+  },
+  '3up-arch': {
+    label: '3-Up: ∧',
+    minScreens: 3, maxScreens: 3,
+    defaultFrame: 'phone-bare',
+    allowedFrames: ['phone', 'phone-bare'],
+    render: ({ frame }) => threeUp(frame, [
+      { cx: 160, cy: 335 },
+      { cx: 400, cy: 265 },
+      { cx: 640, cy: 335 }
+    ])
+  },
+  '3up-stairs-down': {
+    label: '3-Up: Stairs ↓',
+    minScreens: 3, maxScreens: 3,
+    defaultFrame: 'phone-bare',
+    allowedFrames: ['phone', 'phone-bare'],
+    render: ({ frame }) => threeUp(frame, [
+      { cx: 160, cy: 255 },
+      { cx: 400, cy: 300 },
+      { cx: 640, cy: 345 }
+    ])
+  },
+  '3up-stairs-up': {
+    label: '3-Up: Stairs ↑',
+    minScreens: 3, maxScreens: 3,
+    defaultFrame: 'phone-bare',
+    allowedFrames: ['phone', 'phone-bare'],
+    render: ({ frame }) => threeUp(frame, [
+      { cx: 160, cy: 345 },
+      { cx: 400, cy: 300 },
+      { cx: 640, cy: 255 }
+    ])
+  },
+  '3up-overlap': {
+    label: '3-Up: Overlap',
+    minScreens: 3, maxScreens: 3,
+    defaultFrame: 'phone-bare',
+    allowedFrames: ['phone', 'phone-bare'],
+    render: ({ frame }) => threeUp(frame, [
+      { cx: 400, cy: 300, z: 3, rot: 0 },
+      { cx: 285, cy: 305, z: 1, rot: -14 },
+      { cx: 515, cy: 305, z: 2, rot: 14 }
+    ])
   },
   'split-1': {
     label: 'Split 1',
