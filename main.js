@@ -11,21 +11,37 @@ const modalDl = document.getElementById('modal-dl')
 const copyBtn = document.getElementById('copyBtn')
 const canvasView = document.getElementById('canvas-view')
 
-const themeSelect = document.getElementById('theme-select')
-const modeSelect = document.getElementById('mode-select')
+const bgColorSelect = document.getElementById('bg-color-select')
+const deviceColorSelect = document.getElementById('device-color-select')
 const layoutSelect = document.getElementById('layout-select')
 const frameSelect = document.getElementById('frame-select')
 
-const THEMES = {
-  white: { label: 'White' },
-  cream: { label: 'Cream' },
-  sage: { label: 'Sage' }
-}
+const BG_COLORS = [
+  { id: 'white',      label: 'White',      value: '#ffffff' },
+  { id: 'linen',      label: 'Linen',      value: '#f8f3ec' },
+  { id: 'butter',     label: 'Butter',     value: '#fdf5d0' },
+  { id: 'peach',      label: 'Peach',      value: '#fce5d0' },
+  { id: 'blush',      label: 'Blush',      value: '#f8dde0' },
+  { id: 'lilac',      label: 'Lilac',      value: '#ede0f5' },
+  { id: 'sage',       label: 'Sage',       value: '#d8ebdc' },
+  { id: 'sky',        label: 'Sky',        value: '#d5e8f8' },
+  { id: 'clay',       label: 'Clay',       value: '#ece0d8' },
+  { id: 'mocha',      label: 'Mocha',      value: '#1e1812' },
+  { id: 'plum',       label: 'Plum',       value: '#1e1428' },
+]
 
-const MODES = {
-  light: { label: 'Light' },
-  dark: { label: 'Dark' }
-}
+const DEVICE_COLORS = [
+  { id: 'black',      label: 'Black',      border: '#111114', surface: '#080808', chrome: '#1c1c1e', chromeAccent: '#282828', screenBorder: 'rgba(255,255,255,0.06)' },
+  { id: 'graphite',   label: 'Graphite',   border: '#403c38', surface: '#121010', chrome: '#343030', chromeAccent: '#403c38', screenBorder: 'rgba(255,255,255,0.07)' },
+  { id: 'titanium',   label: 'Titanium',   border: '#8a8680', surface: '#1a1816', chrome: '#706c68', chromeAccent: '#7e7a74', screenBorder: 'rgba(255,255,255,0.09)' },
+  { id: 'silver',     label: 'Silver',     border: '#c8c8cc', surface: '#f8f8fa', chrome: '#dcdce0', chromeAccent: '#c8c8cc', screenBorder: 'rgba(0,0,0,0.06)' },
+  { id: 'gold',       label: 'Gold',       border: '#c8a87a', surface: '#100e08', chrome: '#c8a87a', chromeAccent: '#b8986a', screenBorder: 'rgba(255,255,255,0.08)' },
+  { id: 'rosegold',   label: 'Rose Gold',  border: '#c89898', surface: '#120c0c', chrome: '#c89898', chromeAccent: '#b88888', screenBorder: 'rgba(255,255,255,0.08)' },
+  { id: 'merlot',     label: 'Merlot',     border: '#6a1e30', surface: '#0e0408', chrome: '#6a1e30', chromeAccent: '#7a2838', screenBorder: 'rgba(255,255,255,0.07)' },
+  { id: 'sage',       label: 'Sage',       border: '#3a5a48', surface: '#080c0a', chrome: '#3a5a48', chromeAccent: '#486858', screenBorder: 'rgba(255,255,255,0.07)' },
+  { id: 'indigo',     label: 'Indigo',     border: '#263898', surface: '#04060e', chrome: '#263898', chromeAccent: '#3448a8', screenBorder: 'rgba(255,255,255,0.07)' },
+  { id: 'bone',       label: 'Bone',       border: '#e8e2d4', surface: '#f8f6f0', chrome: '#e8e2d4', chromeAccent: '#dcd6c6', screenBorder: 'rgba(0,0,0,0.06)' },
+]
 
 const FRAMES = {
   phone: { label: 'Phone' },
@@ -40,8 +56,8 @@ let activeDrop = null
 const imgStore = {}
 
 const state = {
-  theme: 'white',
-  mode: 'light',
+  bgColor: 'linen',
+  deviceColor: 'black',
   layout: 'filmstrip',
   frame: 'phone',
   screenCount: 4
@@ -68,7 +84,7 @@ function getFrameFamily(frame) {
 }
 
 function phHTML() {
-  return `<div class="ph"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 15l5-5 4 4 3-3 6 6"/><circle cx="8.5" cy="8.5" r="1.5"/></svg><span>upload</span></div><img>`
+  return `<div class="ph"><div class="ph-btn"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 15l5-5 4 4 3-3 6 6"/><circle cx="8.5" cy="8.5" r="1.5"/></svg><span>Select Image</span></div></div><img>`
 }
 
 function dropHTML(id) {
@@ -103,7 +119,7 @@ function toStyle(styleObject) {
 }
 
 function absoluteSlot(frame, index, styleObject) {
-  return `<div class="layout-slot" style="${toStyle(styleObject)}">${renderFrame(frame, screenId(index))}</div>`
+  return `<div class="layout-slot" style="${toStyle(styleObject)}">${wrappedFrame(frame, screenId(index))}</div>`
 }
 
 function panelSlot(panelClass, frame, index) {
@@ -125,14 +141,14 @@ function wrappedFrame(frame, id, options = {}) {
   return `<div class="device-wrapper" style="--shadow-r:${r}px"><div class="device-shadow"></div>${renderFrame(frame, id, options)}</div>`
 }
 
-function carHTML(id) {
-  return `<div class="car" data-id="${id}">${phHTML()}</div>`
+function carHTML(id, pos = 'center') {
+  return `<div class="car car--${pos}" data-id="${id}">${phHTML()}</div>`
 }
 
-function filmstripSlotHTML(frame, id) {
+function filmstripSlotHTML(frame, id, pos = 'center') {
   const r = shadowRadius(frame)
   const inner = frame === 'phone-bare'
-    ? carHTML(id)
+    ? carHTML(id, pos)
     : `<div class="car-wrap">${renderFrame(frame, id)}</div>`
   return `<div class="device-wrapper" style="--shadow-r:${r}px"><div class="device-shadow"></div>${inner}</div>`
 }
@@ -160,7 +176,7 @@ const LAYOUTS = {
     maxScreens: 3,
     defaultFrame: 'phone-bare',
     allowedFrames: ['phone-bare', 'phone'],
-    render: ({ frame }) => `<div class="layout layout-filmstrip"><div class="filmstrip"><div class="train train1">${filmstripSlotHTML(frame, screenId(0))}</div><div class="train train2">${filmstripSlotHTML(frame, screenId(1))}${filmstripSlotHTML(frame, screenId(2))}</div></div></div>`
+    render: ({ frame }) => `<div class="layout layout-filmstrip"><div class="filmstrip"><div class="train train1">${filmstripSlotHTML(frame, screenId(0))}</div><div class="train train2">${filmstripSlotHTML(frame, screenId(1), 'bottom')}${filmstripSlotHTML(frame, screenId(2), 'top')}</div></div></div>`
   }
 }
 
@@ -168,9 +184,31 @@ function getLayout() {
   return LAYOUTS[state.layout]
 }
 
-function setCanvasTheme() {
-  canvas.className = 'canvas'
-  canvas.classList.add(`theme-${state.theme}`, `mode-${state.mode}`)
+function isLightColor(hex) {
+  const r = parseInt(hex.slice(1, 3), 16)
+  const g = parseInt(hex.slice(3, 5), 16)
+  const b = parseInt(hex.slice(5, 7), 16)
+  return (r * 299 + g * 587 + b * 114) / 1000 > 128
+}
+
+function applyCanvasColors() {
+  const bg = BG_COLORS.find(c => c.id === state.bgColor)
+  const dev = DEVICE_COLORS.find(c => c.id === state.deviceColor)
+  const light = isLightColor(bg.value)
+  const devLight = isLightColor(dev.surface)
+  const vars = {
+    '--canvas-bg': bg.value,
+    '--canvas-fg': light ? '#151515' : '#f5f6f7',
+    '--surface-bg': dev.surface,
+    '--device-border': dev.border,
+    '--chrome-bg': dev.chrome,
+    '--chrome-accent': dev.chromeAccent,
+    '--screen-border': dev.screenBorder,
+    '--placeholder-bg': devLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.08)',
+    '--placeholder-stroke': devLight ? 'rgba(0,0,0,0.28)' : 'rgba(255,255,255,0.28)',
+    '--placeholder-label': devLight ? 'rgba(0,0,0,0.42)' : 'rgba(255,255,255,0.42)',
+  }
+  for (const [k, v] of Object.entries(vars)) canvas.style.setProperty(k, v)
 }
 
 function syncStateToLayout() {
@@ -199,15 +237,15 @@ function refreshControls() {
   const layout = getLayout()
 
   setOptions(
-    themeSelect,
-    Object.entries(THEMES).map(([value, config]) => ({ value, label: config.label })),
-    state.theme
+    bgColorSelect,
+    BG_COLORS.map(({ id, label }) => ({ value: id, label })),
+    state.bgColor
   )
 
   setOptions(
-    modeSelect,
-    Object.entries(MODES).map(([value, config]) => ({ value, label: config.label })),
-    state.mode
+    deviceColorSelect,
+    DEVICE_COLORS.map(({ id, label }) => ({ value: id, label })),
+    state.deviceColor
   )
 
   setOptions(
@@ -233,7 +271,7 @@ function render() {
 
 function updateUI() {
   syncStateToLayout()
-  setCanvasTheme()
+  applyCanvasColors()
   refreshControls()
   render()
 }
@@ -297,14 +335,14 @@ fi.addEventListener('change', () => {
   fi.value = ''
 })
 
-themeSelect.addEventListener('change', () => {
-  state.theme = themeSelect.value
-  setCanvasTheme()
+bgColorSelect.addEventListener('change', () => {
+  state.bgColor = bgColorSelect.value
+  applyCanvasColors()
 })
 
-modeSelect.addEventListener('change', () => {
-  state.mode = modeSelect.value
-  setCanvasTheme()
+deviceColorSelect.addEventListener('change', () => {
+  state.deviceColor = deviceColorSelect.value
+  applyCanvasColors()
 })
 
 layoutSelect.addEventListener('change', () => {

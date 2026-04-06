@@ -1,3 +1,7 @@
+:root {
+  --device-shadow: 0 40px 80px rgba(0, 0, 0, 0.28), 0 16px 32px rgba(0, 0, 0, 0.16);
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -20,8 +24,8 @@ body {
 }
 
 .bar {
-  display: grid;
-  grid-template-columns: 0.9fr 0.8fr 0.9fr 1.55fr 0.95fr;
+  display: flex;
+  justify-content: center;
   gap: 6px;
   margin-bottom: 12px;
 }
@@ -144,93 +148,9 @@ body {
   transition: background .24s ease;
   flex-shrink: 0;
   transform-origin: center;
-  box-shadow: 0 24px 70px rgba(0, 0, 0, .18), 0 8px 24px rgba(0, 0, 0, .1);
-  background: var(--canvas-bg);
-  color: var(--canvas-fg);
-}
-
-.canvas.theme-white.mode-light {
-  --canvas-bg: #ffffff;
-  --canvas-fg: #151515;
-  --chrome-bg: #ededed;
-  --chrome-accent: #dbdbdb;
-  --placeholder-bg: #f2f2f2;
-  --placeholder-stroke: #9c9c9c;
-  --placeholder-label: #8c8c8c;
-  --surface-bg: #f8f8f8;
-  --device-border: #111111;
-  --screen-border: rgba(17, 17, 17, 0.08);
-  --divider: rgba(255, 255, 255, 0.96);
-}
-
-.canvas.theme-white.mode-dark {
-  --canvas-bg: #14171b;
-  --canvas-fg: #f5f6f7;
-  --chrome-bg: #21262c;
-  --chrome-accent: #2d343c;
-  --placeholder-bg: #1d2127;
-  --placeholder-stroke: #525c68;
-  --placeholder-label: #7f8b98;
-  --surface-bg: #181d22;
-  --device-border: #2f3640;
-  --screen-border: rgba(255, 255, 255, 0.08);
-  --divider: rgba(20, 23, 27, 0.96);
-}
-
-.canvas.theme-cream.mode-light {
-  --canvas-bg: #f2ede4;
-  --canvas-fg: #2f271f;
-  --chrome-bg: #e5ddd0;
-  --chrome-accent: #d7ccbc;
-  --placeholder-bg: #ede6db;
-  --placeholder-stroke: #a18d78;
-  --placeholder-label: #8f7c68;
-  --surface-bg: #f8f2e8;
-  --device-border: #1d1711;
-  --screen-border: rgba(58, 42, 24, 0.1);
-  --divider: rgba(248, 242, 232, 0.98);
-}
-
-.canvas.theme-cream.mode-dark {
-  --canvas-bg: #211b16;
-  --canvas-fg: #f4ede4;
-  --chrome-bg: #342a22;
-  --chrome-accent: #43352a;
-  --placeholder-bg: #2a221b;
-  --placeholder-stroke: #7d6650;
-  --placeholder-label: #ab957f;
-  --surface-bg: #241d18;
-  --device-border: #3f342a;
-  --screen-border: rgba(255, 239, 221, 0.1);
-  --divider: rgba(33, 27, 22, 0.98);
-}
-
-.canvas.theme-sage.mode-light {
-  --canvas-bg: #e8f0e8;
-  --canvas-fg: #1b261f;
-  --chrome-bg: #d7e1d7;
-  --chrome-accent: #c3d1c4;
-  --placeholder-bg: #e2ebe2;
-  --placeholder-stroke: #7a907f;
-  --placeholder-label: #6c8372;
-  --surface-bg: #edf4ed;
-  --device-border: #162019;
-  --screen-border: rgba(22, 32, 25, 0.08);
-  --divider: rgba(237, 244, 237, 0.98);
-}
-
-.canvas.theme-sage.mode-dark {
-  --canvas-bg: #17211b;
-  --canvas-fg: #edf4ee;
-  --chrome-bg: #223129;
-  --chrome-accent: #2d3e34;
-  --placeholder-bg: #1e2b24;
-  --placeholder-stroke: #617769;
-  --placeholder-label: #8ba192;
-  --surface-bg: #1a241e;
-  --device-border: #324238;
-  --screen-border: rgba(232, 240, 232, 0.09);
-  --divider: rgba(23, 33, 27, 0.98);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, .10), 0 4px 12px rgba(0, 0, 0, .07);
+  background: var(--canvas-bg, #ffffff);
+  color: var(--canvas-fg, #151515);
 }
 
 #grid-background {
@@ -274,9 +194,7 @@ body {
   inset: 0;
   z-index: 1;
   border-radius: var(--shadow-r, 22px);
-  box-shadow:
-    0 22px 56px rgba(0, 0, 0, 0.18),
-    0 8px 20px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--device-shadow);
   pointer-events: none;
 }
 
@@ -452,26 +370,38 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 7px;
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: var(--placeholder-bg);
+  background: #e8e8ea;
 }
 
-.ph svg {
-  width: 18px;
-  height: 18px;
-  opacity: 0.42;
-  stroke: var(--placeholder-stroke);
+.car--top .ph { justify-content: flex-start; padding-top: 40px; }
+.car--bottom .ph { justify-content: flex-end; padding-bottom: 40px; }
+
+.ph-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 18px 22px;
+  border: 1.5px dashed rgba(0, 0, 0, 0.25);
+  border-radius: 8px;
 }
 
-.ph span {
+.ph-btn svg {
+  width: 16px;
+  height: 16px;
+  opacity: 0.38;
+  stroke: #333;
+}
+
+.ph-btn span {
   font-family: 'DM Mono', monospace;
   font-size: 7px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--placeholder-label);
+  color: rgba(0, 0, 0, 0.42);
 }
 
 .layout-solo .layout-slot {
