@@ -219,6 +219,18 @@ function applyCanvasColors() {
   const dev = DEVICE_COLORS.find(c => c.id === state.deviceColor)
   const light = isLightColor(bg.value)
   const devLight = isLightColor(dev.surface)
+
+  // Derive shadow color from bg: use the bg hue but darker/more saturated
+  const r = parseInt(bg.value.slice(1, 3), 16)
+  const g = parseInt(bg.value.slice(3, 5), 16)
+  const b = parseInt(bg.value.slice(5, 7), 16)
+  // Shift shadow toward bg hue (mix 40% bg color into the shadow)
+  const sr = Math.round(r * 0.4)
+  const sg = Math.round(g * 0.4)
+  const sb = Math.round(b * 0.4)
+  const shadowColor1 = `rgba(${sr},${sg},${sb},0.22)`
+  const shadowColor2 = `rgba(${sr},${sg},${sb},0.14)`
+
   const vars = {
     '--canvas-bg': bg.value,
     '--canvas-fg': light ? '#151515' : '#f5f6f7',
@@ -230,6 +242,7 @@ function applyCanvasColors() {
     '--placeholder-bg': devLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.08)',
     '--placeholder-stroke': devLight ? 'rgba(0,0,0,0.28)' : 'rgba(255,255,255,0.28)',
     '--placeholder-label': devLight ? 'rgba(0,0,0,0.42)' : 'rgba(255,255,255,0.42)',
+    '--device-shadow': `0 32px 48px ${shadowColor1}, 0 12px 18px ${shadowColor2}`,
   }
   for (const [k, v] of Object.entries(vars)) canvas.style.setProperty(k, v)
 }
