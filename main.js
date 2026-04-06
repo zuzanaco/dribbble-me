@@ -254,8 +254,8 @@ const LAYOUTS = {
     allowedFrames: ['phone', 'phone-bare'],
     render: ({ frame }) => threeUp(frame, [
       { cx: 400, cy: 300, z: 3, rot: 0 },
-      { cx: 222, cy: 310, z: 1, rot: -10, w: 195 },
-      { cx: 578, cy: 310, z: 2, rot: 10,  w: 195 }
+      { cx: 220, cy: 310, z: 1, rot: -10, w: 200 },
+      { cx: 580, cy: 310, z: 2, rot: 10,  w: 200 }
     ])
   },
   'split-1': {
