@@ -169,13 +169,21 @@ const LAYOUTS = {
     allowedFrames: ['browser', 'screen', 'phone', 'phone-bare', 'tablet', 'tablet-bare'],
     render: ({ frame }) => `<div class="layout layout-solo">${absoluteSlot(frame, 0, { width: soloWidth(frame) })}</div>`
   },
-  split: {
-    label: 'Split',
+  'split-1': {
+    label: 'Split 1',
+    minScreens: 3,
+    maxScreens: 3,
+    defaultFrame: 'phone-bare',
+    allowedFrames: ['phone-bare'],
+    render: ({ frame }) => `<div class="layout layout-split layout-split-1">${[0, 1, 2].map(index => wrappedFrame(frame, screenId(index))).join('')}</div>`
+  },
+  'split-2': {
+    label: 'Split 2',
     minScreens: 4,
     maxScreens: 4,
     defaultFrame: 'phone-bare',
     allowedFrames: ['phone-bare'],
-    render: ({ frame }) => `<div class="layout layout-split">${[0, 1, 2, 3].map(index => wrappedFrame(frame, screenId(index))).join('')}</div>`
+    render: ({ frame }) => `<div class="layout layout-split layout-split-2">${[0, 1, 2, 3].map(index => wrappedFrame(frame, screenId(index))).join('')}</div>`
   },
   filmstrip: {
     label: 'Film strip',

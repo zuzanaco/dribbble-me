@@ -499,10 +499,18 @@ body {
 .layout-split {
   display: flex;
   align-items: center;
-  justify-content: flex-start;
   gap: 5px;
-  padding: 64px 0 64px 68px;
   isolation: isolate;
+}
+
+.layout-split-1 {
+  justify-content: center;
+  padding: 64px 40px;
+}
+
+.layout-split-2 {
+  justify-content: flex-start;
+  padding: 64px 0 64px 68px;
 }
 
 .layout-split .device-wrapper > .frame {
