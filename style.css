@@ -637,12 +637,12 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  background: #1a1410;
-  color: #e8d8c0 !important;
+  background: #FFDD00;
+  color: #1a1410 !important;
   font-family: 'DM Mono', monospace;
   font-size: 10px;
   padding: 5px 10px;
-  border-radius: 999px;
+  border-radius: 0;
   text-decoration: none !important;
   transition: opacity 0.15s;
 }
