@@ -180,6 +180,22 @@ const LAYOUTS = {
     defaultFrame: 'phone-bare',
     allowedFrames: ['phone-bare', 'phone'],
     render: ({ frame }) => `<div class="layout layout-filmstrip"><div class="filmstrip"><div class="train train1">${filmstripSlotHTML(frame, screenId(0))}</div><div class="train train2">${filmstripSlotHTML(frame, screenId(1), 'bottom')}${filmstripSlotHTML(frame, screenId(2), 'top')}</div></div></div>`
+  },
+  'grid-1': {
+    label: 'Grid 1',
+    minScreens: 3,
+    maxScreens: 3,
+    defaultFrame: 'phone-bare',
+    allowedFrames: ['phone-bare', 'tablet-bare', 'screen'],
+    render: ({ frame }) => `<div class="layout layout-grid layout-grid-1"><div class="grid-container">${[0, 1, 2].map(index => `<div class="grid-item">${wrappedFrame(frame, screenId(index))}</div>`).join('')}</div></div>`
+  },
+  'grid-2': {
+    label: 'Grid 2',
+    minScreens: 4,
+    maxScreens: 4,
+    defaultFrame: 'phone-bare',
+    allowedFrames: ['phone-bare', 'tablet-bare', 'screen'],
+    render: ({ frame }) => `<div class="layout layout-grid layout-grid-2"><div class="grid-container">${[0, 1, 2, 3].map(index => `<div class="grid-item">${wrappedFrame(frame, screenId(index))}</div>`).join('')}</div></div>`
   }
 }
 
