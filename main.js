@@ -10,6 +10,13 @@ const modalClose = document.getElementById('modal-close')
 const modalDl = document.getElementById('modal-dl')
 const copyBtn = document.getElementById('copyBtn')
 const canvasView = document.getElementById('canvas-view')
+const imageSlotSelect = document.getElementById('image-slot-select')
+const imageScaleInput = document.getElementById('image-scale-input')
+const imageXInput = document.getElementById('image-x-input')
+const imageYInput = document.getElementById('image-y-input')
+const rotateImageBtn = document.getElementById('rotateImageBtn')
+const replaceImageBtn = document.getElementById('replaceImageBtn')
+const resetTransformBtn = document.getElementById('resetTransformBtn')
 
 const bgColorSelect = document.getElementById('bg-color-select')
 const deviceColorSelect = document.getElementById('device-color-select')
@@ -55,6 +62,8 @@ const FRAMES = {
 let lastShot = null
 let activeDrop = null
 const imgStore = {}
+let selectedImageId = screenId(0)
+let activeGesture = null
 
 const state = {
   bgColor: 'linen',
@@ -72,7 +81,13 @@ function updateScale() {
 }
 
 window.addEventListener('resize', updateScale)
-setTimeout(updateScale, 100)
+new ResizeObserver(() => {
+  updateScale()
+}).observe(canvasView)
+updateScale()
+document.fonts.ready.then(() => {
+  updateScale()
+})
 
 function screenId(index) {
   return `screen-${index + 1}`
@@ -304,6 +319,215 @@ function getLayout() {
   return LAYOUTS[state.layout]
 }
 
+function createImageState(src = '') {
+  return { src, scale: 1, x: 50, y: 50, rotation: 0, naturalWidth: 0, naturalHeight: 0 }
+}
+
+function getAvailableImageIds() {
+  return Array.from({ length: state.screenCount }, (_, index) => screenId(index))
+}
+
+function getSelectedImageId() {
+  const availableIds = getAvailableImageIds()
+  if (!availableIds.includes(selectedImageId)) {
+    selectedImageId = availableIds[0]
+  }
+  return selectedImageId
+}
+
+function setSelectedImageId(id) {
+  if (!getAvailableImageIds().includes(id)) return
+  selectedImageId = id
+  syncSelectedDropState()
+  syncTransformControls()
+}
+
+function ensureImageState(id) {
+  if (!imgStore[id]) {
+    imgStore[id] = createImageState()
+  }
+  return imgStore[id]
+}
+
+function applyImageTransform(drop, imageState) {
+  const img = drop.querySelector('img')
+  drop.classList.toggle('has-image', Boolean(imageState.src))
+
+  if (!imageState.src || !imageState.naturalWidth || !imageState.naturalHeight) return
+
+  const frameWidth = drop.clientWidth
+  const frameHeight = drop.clientHeight
+  if (!frameWidth || !frameHeight) return
+
+  const quarterTurns = ((imageState.rotation % 360) + 360) % 360 / 90
+  const isQuarterTurn = quarterTurns % 2 === 1
+  const fitWidth = isQuarterTurn ? imageState.naturalHeight : imageState.naturalWidth
+  const fitHeight = isQuarterTurn ? imageState.naturalWidth : imageState.naturalHeight
+  const containScale = Math.min(frameWidth / fitWidth, frameHeight / fitHeight)
+  const coverScale = Math.max(frameWidth / fitWidth, frameHeight / fitHeight)
+  const normalizedScale = clamp((imageState.scale - 0.5) / 0.5, 0, 1)
+  const fittedScale = imageState.scale <= 1
+    ? containScale + ((coverScale - containScale) * normalizedScale)
+    : coverScale * imageState.scale
+
+  const width = imageState.naturalWidth * fittedScale
+  const height = imageState.naturalHeight * fittedScale
+  const boxWidth = isQuarterTurn ? height : width
+  const boxHeight = isQuarterTurn ? width : height
+  const boxLeft = (frameWidth - boxWidth) * (imageState.x / 100)
+  const boxTop = (frameHeight - boxHeight) * (imageState.y / 100)
+  const left = boxLeft + ((boxWidth - width) / 2)
+  const top = boxTop + ((boxHeight - height) / 2)
+
+  img.style.width = `${width}px`
+  img.style.height = `${height}px`
+  img.style.left = `${left}px`
+  img.style.top = `${top}px`
+  img.style.transform = `rotate(${imageState.rotation}deg)`
+  img.style.transformOrigin = 'center'
+}
+
+function syncSelectedDropState() {
+  const selectedId = getSelectedImageId()
+  stage.querySelectorAll('.drop, .car').forEach(drop => {
+    drop.classList.toggle('is-selected', drop.dataset.id === selectedId)
+  })
+}
+
+function syncTransformControls() {
+  const selectedId = getSelectedImageId()
+  const imageState = ensureImageState(selectedId)
+  const options = getAvailableImageIds().map((id, index) => ({
+    value: id,
+    label: `Screen ${index + 1}`
+  }))
+
+  setOptions(imageSlotSelect, options, selectedId)
+  imageScaleInput.value = String(Math.round(imageState.scale * 100))
+  imageXInput.value = String(imageState.x)
+  imageYInput.value = String(imageState.y)
+}
+
+function updateSelectedImageTransform(patch) {
+  const id = getSelectedImageId()
+  updateImageTransform(id, patch)
+}
+
+function clamp(value, min, max) {
+  return Math.min(max, Math.max(min, value))
+}
+
+function updateImageTransform(id, patch) {
+  const imageState = ensureImageState(id)
+  Object.assign(imageState, patch)
+  imageState.scale = clamp(imageState.scale, 0.5, 2.5)
+  imageState.x = clamp(imageState.x, 0, 100)
+  imageState.y = clamp(imageState.y, 0, 100)
+
+  const drop = stage.querySelector(`[data-id="${id}"]`)
+  if (drop) {
+    applyImageTransform(drop, imageState)
+  }
+
+  if (id === getSelectedImageId()) {
+    syncTransformControls()
+  }
+}
+
+function getTouchDistance(event) {
+  if (event.pointerType !== 'touch' || !activeGesture || activeGesture.pointers.size < 2) return null
+  const [first, second] = Array.from(activeGesture.pointers.values())
+  return Math.hypot(second.x - first.x, second.y - first.y)
+}
+
+function beginGesture(drop, event) {
+  const id = drop.dataset.id
+  const imageState = ensureImageState(id)
+  if (!imageState.src) return false
+
+  setSelectedImageId(id)
+  if (!activeGesture || activeGesture.id !== id || activeGesture.pointerType !== event.pointerType) {
+    activeGesture = {
+      id,
+      drop,
+      pointerType: event.pointerType,
+      pointers: new Map(),
+      startScale: imageState.scale,
+      startX: imageState.x,
+      startY: imageState.y,
+      lastClientX: event.clientX,
+      lastClientY: event.clientY,
+      moved: false,
+      initialDistance: null
+    }
+  }
+
+  activeGesture.pointers.set(event.pointerId, { x: event.clientX, y: event.clientY })
+  if (event.pointerType === 'touch' && activeGesture.pointers.size >= 2) {
+    activeGesture.startScale = imageState.scale
+    activeGesture.initialDistance = getTouchDistance(event)
+  }
+  drop.classList.add('is-dragging')
+  drop.setPointerCapture(event.pointerId)
+  return true
+}
+
+function updateGesture(event) {
+  if (!activeGesture || !activeGesture.pointers.has(event.pointerId)) return
+
+  activeGesture.pointers.set(event.pointerId, { x: event.clientX, y: event.clientY })
+  const imageState = ensureImageState(activeGesture.id)
+
+  if (activeGesture.pointerType === 'touch' && activeGesture.pointers.size >= 2) {
+    const distance = getTouchDistance(event)
+    if (distance && activeGesture.initialDistance) {
+      const nextScale = activeGesture.startScale * (distance / activeGesture.initialDistance)
+      updateImageTransform(activeGesture.id, { scale: nextScale })
+      activeGesture.moved = true
+    }
+    return
+  }
+
+  const rect = activeGesture.drop.getBoundingClientRect()
+  if (!rect.width || !rect.height) return
+
+  const dx = ((event.clientX - activeGesture.lastClientX) / rect.width) * 100
+  const dy = ((event.clientY - activeGesture.lastClientY) / rect.height) * 100
+
+  if (dx !== 0 || dy !== 0) {
+    updateImageTransform(activeGesture.id, {
+      x: imageState.x + dx,
+      y: imageState.y + dy
+    })
+    activeGesture.lastClientX = event.clientX
+    activeGesture.lastClientY = event.clientY
+    activeGesture.moved = true
+  }
+}
+
+function endGesture(event) {
+  if (!activeGesture || !activeGesture.pointers.has(event.pointerId)) return
+
+  activeGesture.pointers.delete(event.pointerId)
+  if (activeGesture.drop.hasPointerCapture(event.pointerId)) {
+    activeGesture.drop.releasePointerCapture(event.pointerId)
+  }
+
+  if (activeGesture.pointers.size === 1) {
+    const [{ x, y }] = Array.from(activeGesture.pointers.values())
+    activeGesture.lastClientX = x
+    activeGesture.lastClientY = y
+    activeGesture.startScale = ensureImageState(activeGesture.id).scale
+    activeGesture.initialDistance = null
+    return
+  }
+
+  if (activeGesture.pointers.size === 0) {
+    activeGesture.drop.classList.remove('is-dragging')
+    activeGesture = null
+  }
+}
+
 function isLightColor(hex) {
   const r = parseInt(hex.slice(1, 3), 16)
   const g = parseInt(hex.slice(3, 5), 16)
@@ -416,6 +640,8 @@ function render() {
   stage.innerHTML = getLayout().render(state)
   restoreImages()
   bindAll()
+  syncSelectedDropState()
+  syncTransformControls()
 }
 
 function updateUI() {
@@ -429,22 +655,51 @@ function restoreImages() {
   stage.querySelectorAll('.drop, .car').forEach(drop => {
     const id = drop.dataset.id
 
-    if (!imgStore[id]) return
+    if (!imgStore[id]?.src) return
 
     const img = drop.querySelector('img')
     const ph = drop.querySelector('.ph')
 
-    img.src = imgStore[id]
+    img.src = imgStore[id].src
     img.classList.add('vis')
     ph.style.display = 'none'
+    applyImageTransform(drop, imgStore[id])
   })
 }
 
 function bindAll() {
   stage.querySelectorAll('.drop, .car').forEach(drop => {
     drop.addEventListener('click', () => {
+      setSelectedImageId(drop.dataset.id)
+
+      if (ensureImageState(drop.dataset.id).src) return
+
       activeDrop = drop
       fi.click()
+    })
+
+    drop.addEventListener('dblclick', () => {
+      setSelectedImageId(drop.dataset.id)
+      activeDrop = drop
+      fi.click()
+    })
+
+    drop.addEventListener('pointerdown', event => {
+      if (event.button !== 0 && event.pointerType !== 'touch') return
+      if (!beginGesture(drop, event)) return
+      event.preventDefault()
+    })
+
+    drop.addEventListener('pointermove', event => {
+      updateGesture(event)
+    })
+
+    drop.addEventListener('pointerup', event => {
+      endGesture(event)
+    })
+
+    drop.addEventListener('pointercancel', event => {
+      endGesture(event)
     })
 
     drop.addEventListener('dragover', event => {
@@ -468,6 +723,7 @@ function bindAll() {
       const wrapper = drop.closest('.device-wrapper')
       if (wrapper) wrapper.classList.remove('over')
       else drop.classList.remove('over')
+      setSelectedImageId(drop.dataset.id)
       loadImage(event.dataTransfer.files[0], drop)
     })
   })
@@ -478,11 +734,18 @@ function loadImage(file, drop) {
 
   const reader = new FileReader()
   reader.onload = event => {
+    const imageState = ensureImageState(drop.dataset.id)
     const img = drop.querySelector('img')
+    img.onload = () => {
+      imageState.src = event.target.result
+      imageState.naturalWidth = img.naturalWidth
+      imageState.naturalHeight = img.naturalHeight
+      img.classList.add('vis')
+      drop.querySelector('.ph').style.display = 'none'
+      applyImageTransform(drop, imageState)
+      setSelectedImageId(drop.dataset.id)
+    }
     img.src = event.target.result
-    img.classList.add('vis')
-    drop.querySelector('.ph').style.display = 'none'
-    imgStore[drop.dataset.id] = event.target.result
   }
   reader.readAsDataURL(file)
 }
@@ -513,6 +776,40 @@ frameSelect.addEventListener('change', () => {
   updateUI()
 })
 
+imageSlotSelect.addEventListener('change', () => {
+  setSelectedImageId(imageSlotSelect.value)
+})
+
+imageScaleInput.addEventListener('input', () => {
+  updateSelectedImageTransform({ scale: Number(imageScaleInput.value) / 100 })
+})
+
+imageXInput.addEventListener('input', () => {
+  updateSelectedImageTransform({ x: Number(imageXInput.value) })
+})
+
+imageYInput.addEventListener('input', () => {
+  updateSelectedImageTransform({ y: Number(imageYInput.value) })
+})
+
+rotateImageBtn.addEventListener('click', () => {
+  const imageState = ensureImageState(getSelectedImageId())
+  updateSelectedImageTransform({ rotation: (imageState.rotation + 90) % 360 })
+})
+
+replaceImageBtn.addEventListener('click', () => {
+  const id = getSelectedImageId()
+  const drop = stage.querySelector(`[data-id="${id}"]`)
+  if (!drop) return
+  activeDrop = drop
+  fi.click()
+})
+
+resetTransformBtn.addEventListener('click', () => {
+  updateSelectedImageTransform({ scale: 1, x: 50, y: 50, rotation: 0 })
+  syncTransformControls()
+})
+
 async function waitForRenderableAssets(root) {
   const images = Array.from(root.querySelectorAll('img.vis'))
 
@@ -530,20 +827,23 @@ async function waitForRenderableAssets(root) {
 
 async function renderCanvasPng() {
   await waitForRenderableAssets(canvas)
-  const prevTransform = canvas.style.transform
-  const prevBorderRadius = canvas.style.borderRadius
+  const exportNode = canvas.cloneNode(true)
+  exportNode.style.transform = 'none'
+  exportNode.style.borderRadius = '0'
+  const exportSurface = document.createElement('div')
+  exportSurface.className = 'export-surface'
+  exportSurface.appendChild(exportNode)
+  document.body.appendChild(exportSurface)
 
   try {
-    canvas.style.transform = 'none'
-    canvas.style.borderRadius = '0'
-    return await domToPng(canvas, {
+    await waitForRenderableAssets(exportNode)
+    return await domToPng(exportNode, {
       width: 800,
       height: 600,
       scale: 2
     })
   } finally {
-    canvas.style.transform = prevTransform
-    canvas.style.borderRadius = prevBorderRadius
+    document.body.removeChild(exportSurface)
   }
 }
 
@@ -579,6 +879,22 @@ function triggerDownload(dataUrl) {
   document.body.removeChild(link)
 }
 
+function openModal() {
+  const scrollbarComp = window.innerWidth - document.documentElement.clientWidth
+  document.body.style.setProperty('--scrollbar-comp', `${Math.max(0, scrollbarComp)}px`)
+  document.body.classList.add('modal-open')
+  modal.classList.add('vis')
+}
+
+function closeModal() {
+  modal.classList.remove('vis')
+  modalImg.onload = null
+  modalImg.onerror = null
+  modalImg.src = ''
+  document.body.classList.remove('modal-open')
+  document.body.style.removeProperty('--scrollbar-comp')
+}
+
 exportBtn.onclick = async () => {
   const originalText = exportBtn.textContent
   exportBtn.textContent = 'Exporting...'
@@ -588,10 +904,21 @@ exportBtn.onclick = async () => {
     const dataUrl = await renderCanvasPng()
     lastShot = dataUrl
 
-    triggerDownload(dataUrl)
+    await new Promise(resolve => {
+      modalImg.onload = () => {
+        modalImg.onload = null
+        modalImg.onerror = null
+        resolve()
+      }
+      modalImg.onerror = () => {
+        modalImg.onload = null
+        modalImg.onerror = null
+        resolve()
+      }
+      modalImg.src = dataUrl
+    })
 
-    modalImg.src = dataUrl
-    modal.classList.add('vis')
+    openModal()
   } catch (err) {
     console.error('Export failed:', err)
     alert(`Export failed: ${err.message || 'Check console'}`)
@@ -606,19 +933,16 @@ modalDl.onclick = () => {
 }
 
 modalClose.onclick = () => {
-  modal.classList.remove('vis')
-  modalImg.src = ''
+  closeModal()
 }
 
 modal.addEventListener('click', event => {
   if (event.target === modal) {
-    modal.classList.remove('vis')
-    modalImg.src = ''
+    closeModal()
   }
 })
 
 updateUI()
-setTimeout(updateScale, 500)
 
 const footerYear = document.getElementById('footer-year')
 if (footerYear) {

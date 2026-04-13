@@ -210,6 +210,30 @@
       </div>
     </div>
 
+    <div class="transform-bar" aria-label="Image transform controls">
+      <div class="control">
+        <label class="lbl" for="image-slot-select">Image</label>
+        <select class="sel" id="image-slot-select"></select>
+      </div>
+      <div class="control control-slider">
+        <label class="lbl" for="image-scale-input">Resize</label>
+        <input class="range" id="image-scale-input" type="range" min="50" max="250" step="1" value="100">
+      </div>
+      <div class="control control-slider">
+        <label class="lbl" for="image-x-input">Position X</label>
+        <input class="range" id="image-x-input" type="range" min="0" max="100" step="1" value="50">
+      </div>
+      <div class="control control-slider">
+        <label class="lbl" for="image-y-input">Position Y</label>
+        <input class="range" id="image-y-input" type="range" min="0" max="100" step="1" value="50">
+      </div>
+      <button class="b icon-btn" id="rotateImageBtn" aria-label="Rotate image 90 degrees" title="Rotate 90°">
+        <img src="/rotate.png" alt="" aria-hidden="true">
+      </button>
+      <button class="b" id="replaceImageBtn">Replace Image</button>
+      <button class="b" id="resetTransformBtn">Reset</button>
+    </div>
+
     <div class="canvas-view" id="canvas-view">
       <div class="canvas" id="canvas">
         <div id="grid-background"></div>
@@ -247,11 +271,13 @@
         </svg>
       </button>
       <h3>Export Ready!</h3>
-      <img id="modal-img" src="" alt="Dribbble Shot Preview">
+      <div class="modal-preview">
+        <img id="modal-img" src="" alt="Dribbble Shot Preview">
+      </div>
       <div class="modal-hint">Right-click the image above and select "Save Image As..." if the download didn't start.</div>
       <div class="modal-btns">
         <button class="b export" id="copyBtn">Copy to Clipboard</button>
-        <button class="b export" id="modal-dl">Download Again</button>
+        <button class="b export" id="modal-dl">Download</button>
       </div>
     </div>
   </div>
